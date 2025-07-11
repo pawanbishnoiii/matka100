@@ -1,5 +1,5 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Baloo+Bhai+2:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Satoshi:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -27,12 +27,20 @@
     --ring: 212.7 26.8% 83.9%;
     --radius: 0.75rem;
     
-    /* Custom Matka Colors */
+    /* Premium Matka Colors */
     --neon-red: 0 100% 60%;
     --neon-green: 120 100% 50%;
     --neon-yellow: 60 100% 50%;
     --electric-blue: 210 100% 60%;
     --gold: 45 100% 60%;
+    --premium-purple: 270 100% 60%;
+    --cyan: 180 100% 50%;
+    --magenta: 300 100% 60%;
+    
+    /* Glass morphism */
+    --glass-bg: rgba(255, 255, 255, 0.08);
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
   }
 
   * {
@@ -40,14 +48,46 @@
   }
 
   body {
-    @apply bg-gradient-to-br from-gray-900 via-black to-gray-800 text-foreground font-['Poppins'];
+    @apply bg-gradient-to-br from-gray-900 via-black to-gray-800 text-foreground;
+    font-family: 'Satoshi', 'Inter', 'Poppins', sans-serif;
     min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .font-satoshi {
+    font-family: 'Satoshi', sans-serif;
+  }
+
+  .font-inter {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .font-poppins {
+    font-family: 'Poppins', sans-serif;
   }
 
   .hindi-font {
     font-family: 'Baloo Bhai 2', cursive;
   }
 
+  /* Premium Glass Morphism */
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+
+  .glass-card-premium {
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.45);
+  }
+
+  /* Premium Neon Effects */
   .neon-glow {
     box-shadow: 0 0 20px hsl(var(--neon-red)), 0 0 40px hsl(var(--neon-red)), 0 0 60px hsl(var(--neon-red));
   }
@@ -60,18 +100,55 @@
     box-shadow: 0 0 20px hsl(var(--electric-blue)), 0 0 40px hsl(var(--electric-blue));
   }
 
-  .glass-card {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+  .neon-purple-glow {
+    box-shadow: 0 0 20px hsl(var(--premium-purple)), 0 0 40px hsl(var(--premium-purple));
   }
 
-  .gold-gradient {
-    background: linear-gradient(135deg, #FFD700, #FFA500, #FF8C00);
+  .neon-cyan-glow {
+    box-shadow: 0 0 20px hsl(var(--cyan)), 0 0 40px hsl(var(--cyan));
+  }
+
+  /* Premium Gradients */
+  .gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  .gradient-secondary {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  }
+
+  .gradient-gold {
+    background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
+  }
+
+  .gradient-cyber {
+    background: linear-gradient(135deg, #00f5ff 0%, #ff00ff 100%);
+  }
+
+  .gradient-matka {
+    background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 50%, #45b7d1 100%);
+  }
+
+  /* Advanced Animations */
+  .float-animation {
+    animation: float 3s ease-in-out infinite;
   }
 
   .pulse-glow {
     animation: pulse-glow 2s ease-in-out infinite alternate;
+  }
+
+  .shimmer {
+    animation: shimmer 2s linear infinite;
+  }
+
+  .bounce-slow {
+    animation: bounce-slow 2s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
   }
 
   @keyframes pulse-glow {
@@ -83,6 +160,29 @@
     }
   }
 
+  @keyframes shimmer {
+    0% { background-position: -200px 0; }
+    100% { background-position: calc(200px + 100%) 0; }
+  }
+
+  @keyframes bounce-slow {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .shimmer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    background-size: 200px 100%;
+    animation: shimmer 2s linear infinite;
+  }
+
+  /* Countdown Timer */
   .countdown-timer {
     background: linear-gradient(45deg, #ff4444, #ff6666);
     animation: countdown-pulse 1s ease-in-out infinite;
@@ -93,6 +193,7 @@
     50% { transform: scale(1.05); }
   }
 
+  /* Winning Animation */
   .winning-animation {
     animation: winning-bounce 0.6s ease-in-out;
   }
@@ -101,5 +202,53 @@
     0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
     40% { transform: translateY(-30px); }
     60% { transform: translateY(-15px); }
+  }
+
+  /* Premium Hover Effects */
+  .hover-lift {
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .hover-glow {
+    transition: all 0.3s ease;
+  }
+
+  .hover-glow:hover {
+    box-shadow: 0 0 30px hsl(var(--electric-blue)), 0 0 60px hsl(var(--electric-blue));
+  }
+
+  /* Mobile Optimizations */
+  @media (max-width: 768px) {
+    .glass-card {
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+    }
+    
+    .neon-glow {
+      box-shadow: 0 0 15px hsl(var(--neon-red)), 0 0 30px hsl(var(--neon-red));
+    }
+  }
+
+  /* Scrollbar Styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #667eea, #764ba2);
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #764ba2, #667eea);
   }
 }
