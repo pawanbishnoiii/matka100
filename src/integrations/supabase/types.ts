@@ -116,6 +116,125 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          title: string
+          type: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          title: string
+          type?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          title?: string
+          type?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_settings: {
+        Row: {
+          account_holder_name: string | null
+          account_number: string | null
+          bank_name: string | null
+          created_at: string | null
+          id: string
+          ifsc_code: string | null
+          max_deposit_amount: number | null
+          max_withdrawal_amount: number | null
+          min_deposit_amount: number | null
+          min_withdrawal_amount: number | null
+          razorpay_key_id: string | null
+          razorpay_key_secret: string | null
+          updated_at: string | null
+          upi_id: string | null
+          usdt_trc20_address: string | null
+          withdrawal_fee_percentage: number | null
+        }
+        Insert: {
+          account_holder_name?: string | null
+          account_number?: string | null
+          bank_name?: string | null
+          created_at?: string | null
+          id?: string
+          ifsc_code?: string | null
+          max_deposit_amount?: number | null
+          max_withdrawal_amount?: number | null
+          min_deposit_amount?: number | null
+          min_withdrawal_amount?: number | null
+          razorpay_key_id?: string | null
+          razorpay_key_secret?: string | null
+          updated_at?: string | null
+          upi_id?: string | null
+          usdt_trc20_address?: string | null
+          withdrawal_fee_percentage?: number | null
+        }
+        Update: {
+          account_holder_name?: string | null
+          account_number?: string | null
+          bank_name?: string | null
+          created_at?: string | null
+          id?: string
+          ifsc_code?: string | null
+          max_deposit_amount?: number | null
+          max_withdrawal_amount?: number | null
+          min_deposit_amount?: number | null
+          min_withdrawal_amount?: number | null
+          razorpay_key_id?: string | null
+          razorpay_key_secret?: string | null
+          updated_at?: string | null
+          upi_id?: string | null
+          usdt_trc20_address?: string | null
+          withdrawal_fee_percentage?: number | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          is_admin: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id: string
+          is_admin?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          is_admin?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       referrals: {
         Row: {
           bonus_amount: number | null
@@ -287,60 +406,84 @@ export type Database = {
       }
       users: {
         Row: {
+          address: string | null
           avatar_url: string | null
           balance_gbp: number | null
           balance_inr: number | null
           bank_account: Json | null
+          city: string | null
           created_at: string | null
+          date_of_birth: string | null
           email: string
           id: string
           is_admin: boolean | null
           kyc_documents: Json | null
           kyc_status: Database["public"]["Enums"]["kyc_status"] | null
+          last_login_at: string | null
+          login_count: number | null
           name: string | null
           phone: string | null
+          pincode: string | null
+          profile_image_url: string | null
           referral_code: string | null
           referred_by: string | null
+          state: string | null
           status: Database["public"]["Enums"]["user_status"] | null
           updated_at: string | null
           upi_id: string | null
           usdt_address: string | null
         }
         Insert: {
+          address?: string | null
           avatar_url?: string | null
           balance_gbp?: number | null
           balance_inr?: number | null
           bank_account?: Json | null
+          city?: string | null
           created_at?: string | null
+          date_of_birth?: string | null
           email: string
           id?: string
           is_admin?: boolean | null
           kyc_documents?: Json | null
           kyc_status?: Database["public"]["Enums"]["kyc_status"] | null
+          last_login_at?: string | null
+          login_count?: number | null
           name?: string | null
           phone?: string | null
+          pincode?: string | null
+          profile_image_url?: string | null
           referral_code?: string | null
           referred_by?: string | null
+          state?: string | null
           status?: Database["public"]["Enums"]["user_status"] | null
           updated_at?: string | null
           upi_id?: string | null
           usdt_address?: string | null
         }
         Update: {
+          address?: string | null
           avatar_url?: string | null
           balance_gbp?: number | null
           balance_inr?: number | null
           bank_account?: Json | null
+          city?: string | null
           created_at?: string | null
+          date_of_birth?: string | null
           email?: string
           id?: string
           is_admin?: boolean | null
           kyc_documents?: Json | null
           kyc_status?: Database["public"]["Enums"]["kyc_status"] | null
+          last_login_at?: string | null
+          login_count?: number | null
           name?: string | null
           phone?: string | null
+          pincode?: string | null
+          profile_image_url?: string | null
           referral_code?: string | null
           referred_by?: string | null
+          state?: string | null
           status?: Database["public"]["Enums"]["user_status"] | null
           updated_at?: string | null
           upi_id?: string | null
@@ -361,6 +504,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_admin_user: {
+        Args: { admin_email: string; admin_password: string }
+        Returns: string
+      }
       generate_referral_code: {
         Args: Record<PropertyKey, never>
         Returns: string
