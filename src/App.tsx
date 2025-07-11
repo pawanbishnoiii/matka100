@@ -32,11 +32,11 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
             <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800">
               <Routes>
                 <Route path="/" element={<Index />} />
@@ -100,9 +100,9 @@ const App = () => {
                 {/* Content goes here - handled by Routes */}
               </div>
             </div>
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
     </QueryClientProvider>
   );
 };
