@@ -89,7 +89,13 @@ const ProfilePage = () => {
         .single();
 
       if (error) throw error;
-      setKycSettings({ enabled: data.value || false });
+      
+      // Fix the type issue by properly checking the value type
+      const kycEnabled = typeof data.value === 'boolean' ? data.value : 
+                        typeof data.value === 'string' ? data.value === 'true' : 
+                        false;
+      
+      setKycSettings({ enabled: kycEnabled });
     } catch (error) {
       console.error('Error fetching KYC settings:', error);
     }

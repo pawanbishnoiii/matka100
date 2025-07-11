@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,11 +20,11 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import ModernHero from '@/components/landing/ModernHero';
-import GameShowcase from '@/components/landing/GameShowcase';
-import PayoutCalculator from '@/components/landing/PayoutCalculator';
-import TrustIndicators from '@/components/landing/TrustIndicators';
-import PremiumGameShowcase from '@/components/landing/PremiumGameShowcase';
+import { ModernHero } from '@/components/landing/ModernHero';
+import { GameShowcase } from '@/components/landing/GameShowcase';
+import { PayoutCalculator } from '@/components/landing/PayoutCalculator';
+import { TrustIndicators } from '@/components/landing/TrustIndicators';
+import { PremiumGameShowcase } from '@/components/landing/PremiumGameShowcase';
 
 const Index = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -39,6 +38,13 @@ const Index = () => {
     { label: 'Profile', icon: User, path: '/profile' },
     { label: 'History', icon: History, path: '/results' },
     { label: 'Help', icon: HelpCircle, path: '/profile' }
+  ];
+
+  const paymentMethods = [
+    { name: 'UPI', logo: '📱', color: 'bg-blue-600' },
+    { name: 'Razorpay', logo: '💳', color: 'bg-purple-600' },
+    { name: 'Bank Transfer', logo: '🏦', color: 'bg-green-600' },
+    { name: 'USDT TRC-20', logo: '₿', color: 'bg-orange-600' }
   ];
 
   return (
@@ -209,7 +215,7 @@ const Index = () => {
       <PayoutCalculator />
 
       {/* Trust Indicators */}
-      <TrustIndicators />
+      <TrustIndicators paymentMethods={paymentMethods} />
 
       {/* Trending Section */}
       <section className="py-16 bg-gradient-to-r from-blue-900/20 to-purple-900/20">
