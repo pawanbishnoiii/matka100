@@ -7,10 +7,6 @@ import {
   ArrowDownToLine, 
   ArrowUpFromLine, 
   History, 
-  ToggleLeft, 
-  ToggleRight,
-  IndianRupee,
-  PoundSterling,
   Smartphone,
   Building,
   Bitcoin
@@ -18,31 +14,66 @@ import {
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { useAuth } from '@/hooks/useAuth';
+import AuthModal from './auth/AuthModal';
+import WalletBalance from './wallet/WalletBalance';
+import TransactionHistory from './wallet/TransactionHistory';
 
 const WalletScreen = () => {
-  const [balance] = useState(15750); // In INR
   const [currency, setCurrency] = useState<'INR' | 'GBP'>('INR');
   const [depositAmount, setDepositAmount] = useState('');
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [activeTab, setActiveTab] = useState<'deposit' | 'withdraw' | 'history'>('deposit');
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const { user, loading } = useAuth();
 
-  // Mock exchange rate
-  const exchangeRate = 0.012; // 1 INR = 0.012 GBP
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-700 rounded mb-8"></div>
+          <div className="h-48 bg-gray-700 rounded mb-8"></div>
+          <div className="h-96 bg-gray-700 rounded"></div>
+        </div>
+      </div>
+    );
+  }
 
-  const getDisplayBalance = () => {
-    if (currency === 'GBP') {
-      return (balance * exchangeRate).toFixed(2);
-    }
-    return balance.toLocaleString();
-  };
+  if (!user) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-8"
+        >
+          <h1 className="text-3xl font-bold text-white mb-4 hindi-font flex items-center justify-center gap-3">
+            <Wallet className="w-8 h-8 text-yellow-400" />
+            My Wallet
+          </h1>
+        </motion.div>
 
-  const transactions = [
-    { id: 1, type: 'deposit', amount: 5000, method: 'UPI', status: 'completed', date: '2024-01-15', time: '14:30' },
-    { id: 2, type: 'withdraw', amount: 2500, method: 'Bank', status: 'completed', date: '2024-01-14', time: '10:15' },
-    { id: 3, type: 'deposit', amount: 1000, method: 'Razorpay', status: 'completed', date: '2024-01-13', time: '16:45' },
-    { id: 4, type: 'bet', amount: 500, method: 'Game', status: 'completed', date: '2024-01-13', time: '15:20' },
-    { id: 5, type: 'win', amount: 4500, method: 'Game', status: 'completed', date: '2024-01-12', time: '19:30' },
-  ];
+        <Card className="glass-card border-gray-700 max-w-md mx-auto">
+          <CardContent className="p-8 text-center">
+            <Wallet className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+            <h2 className="text-xl font-bold text-white mb-2">Sign in Required</h2>
+            <p className="text-gray-400 mb-6">Please sign in to access your wallet</p>
+            <Button 
+              onClick={() => setShowAuthModal(true)}
+              className="neon-glow bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+            >
+              Sign In
+            </Button>
+          </CardContent>
+        </Card>
+
+        <AuthModal 
+          isOpen={showAuthModal} 
+          onClose={() => setShowAuthModal(false)} 
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -59,44 +90,9 @@ const WalletScreen = () => {
       </motion.div>
 
       {/* Balance Card */}
-      <motion.div 
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="mb-8"
-      >
-        <Card className="glass-card border-gray-700 neon-blue-glow">
-          <CardContent className="p-8">
-            <div className="text-center">
-              {/* Currency Toggle */}
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <IndianRupee className={`w-5 h-5 ${currency === 'INR' ? 'text-orange-500' : 'text-gray-500'}`} />
-                <button
-                  onClick={() => setCurrency(currency === 'INR' ? 'GBP' : 'INR')}
-                  className="flex items-center gap-2"
-                >
-                  {currency === 'INR' ? (
-                    <ToggleLeft className="w-8 h-8 text-orange-500" />
-                  ) : (
-                    <ToggleRight className="w-8 h-8 text-blue-500" />
-                  )}
-                </button>
-                <PoundSterling className={`w-5 h-5 ${currency === 'GBP' ? 'text-blue-500' : 'text-gray-500'}`} />
-              </div>
-
-              <p className="text-gray-400 mb-2">Available Balance</p>
-              <p className="text-5xl font-bold text-white mb-2">
-                {currency === 'INR' ? '₹' : '£'}{getDisplayBalance()}
-              </p>
-              <p className="text-sm text-gray-400">
-                {currency === 'INR' ? 
-                  `≈ £${(balance * exchangeRate).toFixed(2)}` : 
-                  `≈ ₹${balance.toLocaleString()}`
-                }
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+      <div className="mb-8">
+        <WalletBalance currency={currency} onCurrencyChange={setCurrency} />
+      </div>
 
       {/* Action Tabs */}
       <motion.div 
@@ -234,7 +230,6 @@ const WalletScreen = () => {
                       onClick={() => setWithdrawAmount(amount.toString())}
                       variant="outline"
                       className="glass-card border-gray-600 hover:bg-gray-700/50"
-                      disabled={amount > balance}
                     >
                       ₹{amount}
                     </Button>
@@ -265,7 +260,7 @@ const WalletScreen = () => {
 
               <Button 
                 className="w-full neon-glow bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold py-4 text-lg"
-                disabled={!withdrawAmount || parseFloat(withdrawAmount) <= 0 || parseFloat(withdrawAmount) > balance}
+                disabled={!withdrawAmount || parseFloat(withdrawAmount) <= 0}
               >
                 <ArrowUpFromLine className="w-5 h-5 mr-2" />
                 Withdraw ₹{withdrawAmount || '0'}
@@ -274,56 +269,7 @@ const WalletScreen = () => {
           </Card>
         )}
 
-        {activeTab === 'history' && (
-          <Card className="glass-card border-gray-700">
-            <CardHeader>
-              <CardTitle className="text-white hindi-font flex items-center gap-2">
-                <History className="w-5 h-5 text-blue-400" />
-                Transaction History
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {transactions.map((transaction) => (
-                  <div key={transaction.id} className="glass-card p-4 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          transaction.type === 'deposit' ? 'bg-green-600/20 text-green-400' :
-                          transaction.type === 'withdraw' ? 'bg-red-600/20 text-red-400' :
-                          transaction.type === 'win' ? 'bg-yellow-600/20 text-yellow-400' :
-                          'bg-blue-600/20 text-blue-400'
-                        }`}>
-                          {transaction.type === 'deposit' && <ArrowDownToLine className="w-5 h-5" />}
-                          {transaction.type === 'withdraw' && <ArrowUpFromLine className="w-5 h-5" />}
-                          {transaction.type === 'bet' && <CreditCard className="w-5 h-5" />}
-                          {transaction.type === 'win' && <Wallet className="w-5 h-5" />}
-                        </div>
-                        <div>
-                          <p className="text-white font-semibold capitalize">
-                            {transaction.type === 'bet' ? 'Bet Placed' : 
-                             transaction.type === 'win' ? 'Winning Amount' : transaction.type}
-                          </p>
-                          <p className="text-sm text-gray-400">
-                            {transaction.method} • {transaction.date} {transaction.time}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className={`font-bold ${
-                          transaction.type === 'deposit' || transaction.type === 'win' ? 'text-green-400' : 'text-red-400'
-                        }`}>
-                          {transaction.type === 'deposit' || transaction.type === 'win' ? '+' : '-'}₹{transaction.amount.toLocaleString()}
-                        </p>
-                        <p className="text-xs text-gray-400 capitalize">{transaction.status}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {activeTab === 'history' && <TransactionHistory />}
       </motion.div>
     </div>
   );

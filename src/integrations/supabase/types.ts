@@ -14,16 +14,381 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bets: {
+        Row: {
+          actual_win: number | null
+          amount_inr: number
+          bet_date: string | null
+          bet_type: Database["public"]["Enums"]["bet_type"]
+          created_at: string | null
+          game_id: string
+          id: string
+          is_winner: boolean | null
+          numbers: number[]
+          potential_win: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          actual_win?: number | null
+          amount_inr: number
+          bet_date?: string | null
+          bet_type: Database["public"]["Enums"]["bet_type"]
+          created_at?: string | null
+          game_id: string
+          id?: string
+          is_winner?: boolean | null
+          numbers: number[]
+          potential_win: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          actual_win?: number | null
+          amount_inr?: number
+          bet_date?: string | null
+          bet_type?: Database["public"]["Enums"]["bet_type"]
+          created_at?: string | null
+          game_id?: string
+          id?: string
+          is_winner?: boolean | null
+          numbers?: number[]
+          potential_win?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bets_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      games: {
+        Row: {
+          closing_time: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          multipliers: Json
+          name: string
+          opening_time: string
+          result_time: string | null
+          status: Database["public"]["Enums"]["game_status"] | null
+          timezone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          closing_time?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          multipliers?: Json
+          name: string
+          opening_time: string
+          result_time?: string | null
+          status?: Database["public"]["Enums"]["game_status"] | null
+          timezone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          closing_time?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          multipliers?: Json
+          name?: string
+          opening_time?: string
+          result_time?: string | null
+          status?: Database["public"]["Enums"]["game_status"] | null
+          timezone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          bonus_amount: number | null
+          created_at: string | null
+          id: string
+          referee_id: string
+          referrer_id: string
+          status: Database["public"]["Enums"]["transaction_status"] | null
+        }
+        Insert: {
+          bonus_amount?: number | null
+          created_at?: string | null
+          id?: string
+          referee_id: string
+          referrer_id: string
+          status?: Database["public"]["Enums"]["transaction_status"] | null
+        }
+        Update: {
+          bonus_amount?: number | null
+          created_at?: string | null
+          id?: string
+          referee_id?: string
+          referrer_id?: string
+          status?: Database["public"]["Enums"]["transaction_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_referee_id_fkey"
+            columns: ["referee_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      results: {
+        Row: {
+          created_at: string | null
+          declared_at: string | null
+          game_id: string
+          id: string
+          result_date: string
+          total_amount: number | null
+          total_bets: number | null
+          total_payout: number | null
+          winning_number: number
+        }
+        Insert: {
+          created_at?: string | null
+          declared_at?: string | null
+          game_id: string
+          id?: string
+          result_date: string
+          total_amount?: number | null
+          total_bets?: number | null
+          total_payout?: number | null
+          winning_number: number
+        }
+        Update: {
+          created_at?: string | null
+          declared_at?: string | null
+          game_id?: string
+          id?: string
+          result_date?: string
+          total_amount?: number | null
+          total_bets?: number | null
+          total_payout?: number | null
+          winning_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "results_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      settings: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          key: string
+          updated_at: string | null
+          value: Json
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string | null
+          value: Json
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          commission: number | null
+          created_at: string | null
+          currency: string | null
+          description: string | null
+          external_id: string | null
+          id: string
+          metadata: Json | null
+          payment_method: Database["public"]["Enums"]["payment_method"] | null
+          status: Database["public"]["Enums"]["transaction_status"] | null
+          type: Database["public"]["Enums"]["transaction_type"]
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          commission?: number | null
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          external_id?: string | null
+          id?: string
+          metadata?: Json | null
+          payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          status?: Database["public"]["Enums"]["transaction_status"] | null
+          type: Database["public"]["Enums"]["transaction_type"]
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          commission?: number | null
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          external_id?: string | null
+          id?: string
+          metadata?: Json | null
+          payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          status?: Database["public"]["Enums"]["transaction_status"] | null
+          type?: Database["public"]["Enums"]["transaction_type"]
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          avatar_url: string | null
+          balance_gbp: number | null
+          balance_inr: number | null
+          bank_account: Json | null
+          created_at: string | null
+          email: string
+          id: string
+          is_admin: boolean | null
+          kyc_documents: Json | null
+          kyc_status: Database["public"]["Enums"]["kyc_status"] | null
+          name: string | null
+          phone: string | null
+          referral_code: string | null
+          referred_by: string | null
+          status: Database["public"]["Enums"]["user_status"] | null
+          updated_at: string | null
+          upi_id: string | null
+          usdt_address: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          balance_gbp?: number | null
+          balance_inr?: number | null
+          bank_account?: Json | null
+          created_at?: string | null
+          email: string
+          id?: string
+          is_admin?: boolean | null
+          kyc_documents?: Json | null
+          kyc_status?: Database["public"]["Enums"]["kyc_status"] | null
+          name?: string | null
+          phone?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
+          status?: Database["public"]["Enums"]["user_status"] | null
+          updated_at?: string | null
+          upi_id?: string | null
+          usdt_address?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          balance_gbp?: number | null
+          balance_inr?: number | null
+          bank_account?: Json | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          is_admin?: boolean | null
+          kyc_documents?: Json | null
+          kyc_status?: Database["public"]["Enums"]["kyc_status"] | null
+          name?: string | null
+          phone?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
+          status?: Database["public"]["Enums"]["user_status"] | null
+          updated_at?: string | null
+          upi_id?: string | null
+          usdt_address?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "users_referred_by_fkey"
+            columns: ["referred_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_referral_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      update_user_balance: {
+        Args: { user_uuid: string; amount: number; currency?: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      bet_type:
+        | "single_ank"
+        | "jodi"
+        | "single_patti"
+        | "double_patti"
+        | "triple_patti"
+      game_status: "active" | "inactive" | "upcoming" | "closed"
+      kyc_status: "pending" | "approved" | "rejected"
+      payment_method: "upi" | "razorpay" | "bank_transfer" | "usdt_trc20"
+      transaction_status: "pending" | "completed" | "failed" | "cancelled"
+      transaction_type:
+        | "deposit"
+        | "withdrawal"
+        | "bet"
+        | "win"
+        | "bonus"
+        | "referral"
+      user_status: "active" | "suspended" | "banned"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +515,27 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      bet_type: [
+        "single_ank",
+        "jodi",
+        "single_patti",
+        "double_patti",
+        "triple_patti",
+      ],
+      game_status: ["active", "inactive", "upcoming", "closed"],
+      kyc_status: ["pending", "approved", "rejected"],
+      payment_method: ["upi", "razorpay", "bank_transfer", "usdt_trc20"],
+      transaction_status: ["pending", "completed", "failed", "cancelled"],
+      transaction_type: [
+        "deposit",
+        "withdrawal",
+        "bet",
+        "win",
+        "bonus",
+        "referral",
+      ],
+      user_status: ["active", "suspended", "banned"],
+    },
   },
 } as const
