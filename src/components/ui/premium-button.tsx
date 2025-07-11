@@ -1,13 +1,17 @@
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, HTMLMotionProps } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
-interface PremiumButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface PremiumButtonProps {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
   children: React.ReactNode;
+  className?: string;
+  onClick?: () => void;
+  disabled?: boolean;
+  type?: 'button' | 'submit' | 'reset';
 }
 
 export const PremiumButton = ({ 
@@ -16,6 +20,9 @@ export const PremiumButton = ({
   loading = false, 
   children, 
   className,
+  onClick,
+  disabled,
+  type = 'button',
   ...props 
 }: PremiumButtonProps) => {
   const baseClasses = "relative inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed";
@@ -38,8 +45,9 @@ export const PremiumButton = ({
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       className={cn(baseClasses, variants[variant], sizes[size], className)}
-      disabled={loading}
-      {...props}
+      disabled={loading || disabled}
+      onClick={onClick}
+      type={type}
     >
       {loading && (
         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
