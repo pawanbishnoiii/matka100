@@ -18,6 +18,19 @@ interface OnboardingCarouselProps {
 export const OnboardingCarousel = ({ slides }: OnboardingCarouselProps) => {
   const [currentSlide, setCurrentSlide] = useState(0);
 
+  // Add safety check for slides array
+  if (!slides || slides.length === 0) {
+    return (
+      <div className="relative h-96 md:h-[500px] rounded-3xl overflow-hidden glass-card-premium">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
+          <div className="text-center text-white px-6">
+            <div className="text-4xl md:text-6xl font-bold mb-4">Loading...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
