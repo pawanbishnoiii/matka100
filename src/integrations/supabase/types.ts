@@ -116,6 +116,85 @@ export type Database = {
         }
         Relationships: []
       }
+      help_tickets: {
+        Row: {
+          admin_response: string | null
+          created_at: string | null
+          id: string
+          message: string
+          priority: string | null
+          status: string | null
+          subject: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          admin_response?: string | null
+          created_at?: string | null
+          id?: string
+          message: string
+          priority?: string | null
+          status?: string | null
+          subject: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          admin_response?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string
+          priority?: string | null
+          status?: string | null
+          subject?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "help_tickets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lucky_spins: {
+        Row: {
+          created_at: string | null
+          id: string
+          number: number
+          reward_amount: number | null
+          spin_date: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          number: number
+          reward_amount?: number | null
+          spin_date?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          number?: number
+          reward_amount?: number | null
+          spin_date?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lucky_spins_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string | null
@@ -148,6 +227,57 @@ export type Database = {
           {
             foreignKeyName: "notifications_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      p2p_transfers: {
+        Row: {
+          amount: number
+          created_at: string | null
+          currency: string | null
+          description: string | null
+          id: string
+          receiver_id: string | null
+          receiver_uui: string
+          sender_id: string
+          status: Database["public"]["Enums"]["transaction_status"] | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          id?: string
+          receiver_id?: string | null
+          receiver_uui: string
+          sender_id: string
+          status?: Database["public"]["Enums"]["transaction_status"] | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          id?: string
+          receiver_id?: string | null
+          receiver_uui?: string
+          sender_id?: string
+          status?: Database["public"]["Enums"]["transaction_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "p2p_transfers_receiver_id_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "p2p_transfers_sender_id_fkey"
+            columns: ["sender_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
@@ -432,6 +562,7 @@ export type Database = {
           updated_at: string | null
           upi_id: string | null
           usdt_address: string | null
+          uui_id: string | null
         }
         Insert: {
           address?: string | null
@@ -460,6 +591,7 @@ export type Database = {
           updated_at?: string | null
           upi_id?: string | null
           usdt_address?: string | null
+          uui_id?: string | null
         }
         Update: {
           address?: string | null
@@ -488,6 +620,7 @@ export type Database = {
           updated_at?: string | null
           upi_id?: string | null
           usdt_address?: string | null
+          uui_id?: string | null
         }
         Relationships: [
           {
