@@ -68,7 +68,7 @@ export const PremiumHero = () => {
                 <TrendingUp className="w-8 h-8 text-green-400" />
               </div>
               <div className="text-2xl md:text-3xl font-bold text-gradient mb-1">
-                <AnimatedCounter from={0} to={50000} duration={2000} />+
+                <AnimatedCounter value={50000} suffix="+" duration={2} />
               </div>
               <div className="text-sm text-white/60">Active Players</div>
             </div>
@@ -78,7 +78,7 @@ export const PremiumHero = () => {
                 <Award className="w-8 h-8 text-yellow-400" />
               </div>
               <div className="text-2xl md:text-3xl font-bold text-accent-gradient mb-1">
-                ₹<AnimatedCounter from={0} to={10} duration={2000} />Cr+
+                <AnimatedCounter value={10} prefix="₹" suffix="Cr+" duration={2} />
               </div>
               <div className="text-sm text-white/60">Total Payouts</div>
             </div>
@@ -88,7 +88,7 @@ export const PremiumHero = () => {
                 <Zap className="w-8 h-8 text-blue-400" />
               </div>
               <div className="text-2xl md:text-3xl font-bold text-gradient mb-1">
-                <AnimatedCounter from={0} to={13} duration={2000} />+
+                <AnimatedCounter value={13} suffix="+" duration={2} />
               </div>
               <div className="text-sm text-white/60">Live Games</div>
             </div>
