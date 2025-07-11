@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
@@ -35,6 +34,7 @@ interface Transaction {
   currency: string;
   status: string;
   payment_method: string;
+  commission?: number;
   metadata: any;
   created_at: string;
   users: {
@@ -53,7 +53,7 @@ interface AdminPayoutManagerProps {
 export const AdminPayoutManager = ({ onStatsUpdate }: AdminPayoutManagerProps) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState('pending');
+  const [statusFilter, setStatusFilter] = useState<'pending' | 'completed' | 'failed' | 'cancelled' | 'all'>('pending');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -97,7 +97,7 @@ export const AdminPayoutManager = ({ onStatsUpdate }: AdminPayoutManagerProps) =
     }
   };
 
-  const handleUpdateTransactionStatus = async (transactionId: string, newStatus: string) => {
+  const handleUpdateTransactionStatus = async (transactionId: string, newStatus: 'completed' | 'failed') => {
     try {
       const { error } = await supabase
         .from('transactions')
@@ -172,7 +172,7 @@ export const AdminPayoutManager = ({ onStatsUpdate }: AdminPayoutManagerProps) =
           <DollarSign className="w-6 h-6 text-yellow-400" />
           Payout Management System
         </CardTitle>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select value={statusFilter} onValueChange={(value: 'pending' | 'completed' | 'failed' | 'cancelled' | 'all') => setStatusFilter(value)}>
           <SelectTrigger className="w-40 bg-gray-800 border-gray-600 text-white">
             <SelectValue />
           </SelectTrigger>

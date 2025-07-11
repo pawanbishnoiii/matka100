@@ -93,7 +93,7 @@ export const AdminUserManager = ({ onStatsUpdate }: AdminUserManagerProps) => {
     }
   };
 
-  const handleUpdateUserStatus = async (userId: string, newStatus: string) => {
+  const handleUpdateUserStatus = async (userId: string, newStatus: 'active' | 'suspended' | 'banned') => {
     try {
       const { error } = await supabase
         .from('users')
@@ -118,7 +118,7 @@ export const AdminUserManager = ({ onStatsUpdate }: AdminUserManagerProps) => {
     }
   };
 
-  const handleUpdateKycStatus = async (userId: string, newStatus: string) => {
+  const handleUpdateKycStatus = async (userId: string, newStatus: 'approved' | 'rejected') => {
     try {
       const { error } = await supabase
         .from('users')
