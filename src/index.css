@@ -1,194 +1,201 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@300;400;500;600;700;800;900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-heading: 'Poppins', system-ui, sans-serif;
+  --primary: 262 80% 60%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 220 14.3% 95.9%;
+  --secondary-foreground: 220.9 39.3% 11%;
+  --muted: 220 14.3% 95.9%;
+  --muted-foreground: 220 8.9% 46.1%;
+  --accent: 220 14.3% 95.9%;
+  --accent-foreground: 220.9 39.3% 11%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 220 13% 91%;
+  --input: 220 13% 91%;
+  --ring: 262 80% 60%;
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+}
+
+.dark {
+  --primary: 262 80% 60%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 262 80% 60%;
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
 }
 
 * {
+  border-color: hsl(var(--border));
   box-sizing: border-box;
 }
 
 html {
-  scroll-behavior: smooth;
+  font-size: clamp(14px, 2.5vw, 16px);
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
 }
 
 body {
-  font-family: var(--font-sans);
-  background: #0a0a0a;
-  color: #ffffff;
-  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  line-height: 1.6;
+  overflow-x: hidden;
+  min-width: 320px;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
+#root {
+  min-height: 100vh;
+  width: 100%;
 }
 
-::-webkit-scrollbar-track {
-  background: #1a1a1a;
+.hindi-font {
+  font-family: 'Noto Sans Devanagari', 'Poppins', sans-serif;
 }
 
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(to bottom, #3b82f6, #8b5cf6);
-  border-radius: 4px;
+.glass-card {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(to bottom, #2563eb, #7c3aed);
+.glass-button {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
 }
 
-@layer base {
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-heading);
-    font-weight: 700;
-  }
+.glass-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
 }
 
-@layer components {
-  .premium-gradient {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  }
-  
-  .premium-gradient-text {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  
-  .glass-effect {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-  
-  .neon-glow {
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
-  }
-  
-  .neon-glow-purple {
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
-  }
-  
-  .neon-glow-green {
-    box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
-  }
-  
-  .premium-card {
-    background: linear-gradient(135deg, rgba(17, 24, 39, 0.8) 0%, rgba(31, 41, 55, 0.8) 100%);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(75, 85, 99, 0.3);
-    border-radius: 1rem;
-    transition: all 0.3s ease;
-  }
-  
-  .premium-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    border-color: rgba(59, 130, 246, 0.3);
-  }
-  
-  .matka-gradient {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-  }
-  
-  .animate-float {
-    animation: float 6s ease-in-out infinite;
-  }
-  
-  @keyframes float {
-    0%, 100% {
-      transform: translateY(0px);
-    }
-    50% {
-      transform: translateY(-20px);
-    }
-  }
-  
-  .animate-pulse-slow {
-    animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-  
-  .text-shadow {
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  }
-  
-  .premium-button {
-    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-    color: white;
-    border: none;
-    border-radius: 0.75rem;
-    padding: 0.75rem 1.5rem;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-  }
-  
-  .premium-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
-  }
-  
-  .premium-button:active {
-    transform: translateY(0);
+.gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Responsive utilities */
+.container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container {
+    max-width: 640px;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
   }
 }
 
-@layer utilities {
-  .text-gradient {
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6, #f59e0b);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  
-  .bg-premium {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
-  }
-  
-  .border-premium {
-    border-image: linear-gradient(135deg, #3b82f6, #8b5cf6) 1;
+@media (min-width: 768px) {
+  .container {
+    max-width: 768px;
   }
 }
 
-/* Mobile optimizations */
-@media (max-width: 768px) {
-  .premium-card {
-    padding: 1rem;
-  }
-  
-  .text-gradient {
-    background-size: 100% 100%;
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1024px;
+    padding-left: 2rem;
+    padding-right: 2rem;
   }
 }
 
-/* Animation classes */
-.animate-glow {
-  animation: glow 2s ease-in-out infinite alternate;
-}
-
-@keyframes glow {
-  from {
-    box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
-  }
-  to {
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.4), 0 0 30px rgba(139, 92, 246, 0.3);
+@media (min-width: 1280px) {
+  .container {
+    max-width: 1280px;
   }
 }
 
-.animate-slide-up {
-  animation: slideUp 0.5s ease-out;
+@media (min-width: 1536px) {
+  .container {
+    max-width: 1536px;
+  }
 }
 
-@keyframes slideUp {
+/* Form elements responsive sizing */
+input, textarea, select, button {
+  font-size: clamp(14px, 2.5vw, 16px);
+  min-height: 44px; /* Touch-friendly minimum */
+}
+
+/* Responsive text sizes */
+.text-responsive-xs { font-size: clamp(0.75rem, 2vw, 0.875rem); }
+.text-responsive-sm { font-size: clamp(0.875rem, 2.2vw, 1rem); }
+.text-responsive-base { font-size: clamp(1rem, 2.5vw, 1.125rem); }
+.text-responsive-lg { font-size: clamp(1.125rem, 3vw, 1.25rem); }
+.text-responsive-xl { font-size: clamp(1.25rem, 3.5vw, 1.5rem); }
+.text-responsive-2xl { font-size: clamp(1.5rem, 4vw, 2rem); }
+.text-responsive-3xl { font-size: clamp(1.875rem, 5vw, 2.5rem); }
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes fadeInUp {
   from {
     opacity: 0;
     transform: translateY(30px);
@@ -199,17 +206,40 @@ body {
   }
 }
 
-/* Loading spinner */
-.loading-spinner {
-  border: 3px solid rgba(59, 130, 246, 0.3);
-  border-radius: 50%;
-  border-top: 3px solid #3b82f6;
-  width: 24px;
-  height: 24px;
-  animation: spin 1s linear infinite;
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+/* Utility classes for responsive spacing */
+.p-responsive { padding: clamp(1rem, 3vw, 2rem); }
+.px-responsive { padding-left: clamp(1rem, 3vw, 2rem); padding-right: clamp(1rem, 3vw, 2rem); }
+.py-responsive { padding-top: clamp(1rem, 3vw, 2rem); padding-bottom: clamp(1rem, 3vw, 2rem); }
+.m-responsive { margin: clamp(1rem, 3vw, 2rem); }
+.mx-responsive { margin-left: clamp(1rem, 3vw, 2rem); margin-right: clamp(1rem, 3vw, 2rem); }
+.my-responsive { margin-top: clamp(1rem, 3vw, 2rem); margin-bottom: clamp(1rem, 3vw, 2rem); }
+
+/* Fix for mobile viewport issues */
+@supports (-webkit-touch-callout: none) {
+  .min-h-screen {
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* Ensure content is accessible on all screen sizes */
+@media (max-width: 320px) {
+  body {
+    font-size: 14px;
+  }
+  
+  .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .glass-card {
+    backdrop-filter: blur(15px);
+  }
 }

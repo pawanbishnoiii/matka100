@@ -160,6 +160,33 @@ export type Database = {
           },
         ]
       }
+      legal_pages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          page_type: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          page_type: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          page_type?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       lucky_spins: {
         Row: {
           created_at: string | null
@@ -642,6 +669,10 @@ export type Database = {
         Returns: string
       }
       generate_referral_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_unique_uui: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
