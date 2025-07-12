@@ -28,16 +28,14 @@ import {
 } from '@/components/ui/select';
 import {
   Users,
-  Eye,
   Ban,
   UserCheck,
   Wallet,
-  CreditCard,
-  Shield,
   Search,
   CheckCircle,
   XCircle,
-  AlertTriangle
+  Shield,
+  Trash2
 } from 'lucide-react';
 
 interface User {
@@ -50,6 +48,7 @@ interface User {
   status: string;
   kyc_status: string;
   referral_code: string;
+  uui_id: string;
   is_admin: boolean;
   created_at: string;
 }
@@ -194,10 +193,40 @@ export const AdminUserManager = ({ onStatsUpdate }: AdminUserManagerProps) => {
     }
   };
 
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('users')
+        .delete()
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Success',
+        description: 'User deleted successfully',
+      });
+      fetchUsers();
+      onStatsUpdate();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete user',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const filteredUsers = users.filter(user =>
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.phone?.includes(searchTerm)
+    user.phone?.includes(searchTerm) ||
+    user.uui_id?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (loading) {
@@ -265,7 +294,10 @@ export const AdminUserManager = ({ onStatsUpdate }: AdminUserManagerProps) => {
                         )}
                       </div>
                       <p className="text-gray-400">{user.email}</p>
-                      <p className="text-sm text-gray-500">{user.phone || 'No phone'}</p>
+                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                        <span>{user.phone || 'No phone'}</span>
+                        <span>UUI: {user.uui_id || 'Not set'}</span>
+                      </div>
                     </div>
                   </div>
 
@@ -381,20 +413,29 @@ export const AdminUserManager = ({ onStatsUpdate }: AdminUserManagerProps) => {
                       )}
 
                       {!user.is_admin && (
-                        <Button
-                          size="sm"
-                          variant={user.status === 'active' ? 'destructive' : 'default'}
-                          onClick={() => handleUpdateUserStatus(
-                            user.id,
-                            user.status === 'active' ? 'suspended' : 'active'
-                          )}
-                        >
-                          {user.status === 'active' ? (
-                            <Ban className="w-4 h-4" />
-                          ) : (
-                            <UserCheck className="w-4 h-4" />
-                          )}
-                        </Button>
+                        <>
+                          <Button
+                            size="sm"
+                            variant={user.status === 'active' ? 'destructive' : 'default'}
+                            onClick={() => handleUpdateUserStatus(
+                              user.id,
+                              user.status === 'active' ? 'suspended' : 'active'
+                            )}
+                          >
+                            {user.status === 'active' ? (
+                              <Ban className="w-4 h-4" />
+                            ) : (
+                              <UserCheck className="w-4 h-4" />
+                            )}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDeleteUser(user.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </>
                       )}
                     </div>
                   </div>
