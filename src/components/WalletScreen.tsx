@@ -12,7 +12,7 @@ import WalletBalance from './wallet/WalletBalance';
 import TransactionHistory from './wallet/TransactionHistory';
 import PaymentMethodSetup from './wallet/PaymentMethodSetup';
 import P2PTransfer from './wallet/P2PTransfer';
-import RazorpayIntegration from './wallet/RazorpayIntegration';
+import { RazorpayIntegration } from './wallet/RazorpayIntegration';
 
 export const WalletScreen = () => {
   const { user } = useAuth();
@@ -171,11 +171,11 @@ export const WalletScreen = () => {
             </TabsContent>
 
             <TabsContent value="withdraw">
-              <PaymentMethodSetup userData={userData} onUpdate={fetchUserData} />
+              <PaymentMethodSetup />
             </TabsContent>
 
             <TabsContent value="transfer">
-              <P2PTransfer userData={userData} onTransfer={fetchUserData} />
+              <P2PTransfer />
             </TabsContent>
 
             <TabsContent value="history">
