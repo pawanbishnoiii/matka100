@@ -1,0 +1,244 @@
+
+/* Premium Theme System */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* Premium Color Palette */
+  --primary-50: hsl(240, 100%, 97%);
+  --primary-100: hsl(240, 100%, 94%);
+  --primary-200: hsl(240, 100%, 89%);
+  --primary-300: hsl(240, 100%, 82%);
+  --primary-400: hsl(240, 100%, 72%);
+  --primary-500: hsl(240, 100%, 60%);
+  --primary-600: hsl(240, 100%, 50%);
+  --primary-700: hsl(240, 85%, 45%);
+  --primary-800: hsl(240, 75%, 40%);
+  --primary-900: hsl(240, 65%, 35%);
+  
+  /* Premium Gradients */
+  --gradient-primary: linear-gradient(135deg, hsl(240, 100%, 60%) 0%, hsl(280, 100%, 70%) 100%);
+  --gradient-secondary: linear-gradient(135deg, hsl(200, 90%, 60%) 0%, hsl(240, 90%, 70%) 100%);
+  --gradient-success: linear-gradient(135deg, hsl(120, 60%, 50%) 0%, hsl(140, 70%, 60%) 100%);
+  --gradient-warning: linear-gradient(135deg, hsl(40, 90%, 60%) 0%, hsl(60, 80%, 70%) 100%);
+  --gradient-danger: linear-gradient(135deg, hsl(0, 80%, 60%) 0%, hsl(20, 90%, 70%) 100%);
+  
+  /* Glass Morphism */
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --glass-backdrop: blur(12px) saturate(180%);
+  
+  /* Dark Theme */
+  --bg-primary: hsl(240, 10%, 3.9%);
+  --bg-secondary: hsl(240, 4.8%, 5.9%);
+  --bg-tertiary: hsl(240, 5.2%, 7.5%);
+  --bg-glass: rgba(15, 15, 15, 0.8);
+  --bg-glass-light: rgba(30, 30, 30, 0.6);
+  
+  /* Premium Shadows */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.25);
+  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.4);
+  
+  /* Animation Variables */
+  --animation-fast: 150ms ease-out;
+  --animation-normal: 300ms ease-out;
+  --animation-slow: 500ms ease-out;
+  --animation-slower: 800ms ease-out;
+  
+  /* Spacing System */
+  --space-px: 1px;
+  --space-0: 0;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+  --space-32: 8rem;
+}
+
+/* Premium Utility Classes */
+.glass-effect {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-backdrop);
+  -webkit-backdrop-filter: var(--glass-backdrop);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.gradient-text {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.premium-shadow {
+  box-shadow: var(--shadow-2xl);
+}
+
+.glow-effect {
+  box-shadow: var(--shadow-glow);
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-bounce-slow {
+  animation: bounce 2s infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Premium Typography */
+.text-gradient-primary {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-secondary {
+  background: var(--gradient-secondary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Modern Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gradient-primary);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gradient-secondary);
+}
+
+/* Premium Button Styles */
+.btn-premium {
+  position: relative;
+  overflow: hidden;
+  background: var(--gradient-primary);
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all var(--animation-normal);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-premium:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-xl), var(--shadow-glow);
+}
+
+.btn-premium:active {
+  transform: translateY(0);
+}
+
+.btn-premium::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-premium:hover::before {
+  left: 100%;
+}
+
+/* Premium Card Styles */
+.card-premium {
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 24px;
+  transition: all var(--animation-normal);
+  box-shadow: var(--shadow-lg);
+}
+
+.card-premium:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-2xl);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+  .card-premium {
+    padding: 16px;
+    border-radius: 12px;
+  }
+  
+  .btn-premium {
+    padding: 10px 20px;
+    font-size: 13px;
+  }
+}
+
+/* Safe area handling for mobile */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-left {
+  padding-left: env(safe-area-inset-left);
+}
+
+.safe-area-right {
+  padding-right: env(safe-area-inset-right);
+}

@@ -1,9 +1,155 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap");
+@import './styles/theme.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Add safe area utilities for mobile devices */
+/* Base styles with premium theme */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-feature-settings: 'cv11', 'ss01';
+  font-variation-settings: 'opsz' 32;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: hsl(240, 10%, 3.9%);
+  color: hsl(0, 0%, 98%);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Custom scrollbar for the entire app */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #3b82f6, #8b5cf6);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #2563eb, #7c3aed);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #3b82f6 rgba(255, 255, 255, 0.1);
+}
+
+/* Selection colors */
+::selection {
+  background: rgba(59, 130, 246, 0.3);
+  color: white;
+}
+
+::-moz-selection {
+  background: rgba(59, 130, 246, 0.3);
+  color: white;
+}
+
+/* Focus styles */
+:focus {
+  outline: 2px solid hsl(217.2, 91.2%, 59.8%);
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Custom utilities */
+.text-shadow-sm {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.text-shadow-md {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.text-shadow-lg {
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Loading animation */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+/* Premium glass morphism utilities */
+.glass-card {
+  background: rgba(17, 25, 40, 0.75);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.125);
+}
+
+.glass-card-light {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Premium button effects */
+.btn-glow {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+}
+
+.btn-glow:hover {
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
+}
+
+/* Hindi font support */
+.hindi-font {
+  font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+}
+
+/* Mobile safe areas */
 .safe-area-pb {
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
@@ -20,23 +166,14 @@
   padding-right: env(safe-area-inset-right, 0);
 }
 
-/* Glass morphism utilities */
-.glass-card {
-  background: rgba(17, 25, 40, 0.75);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.125);
-}
-
-/* Hindi font support */
-.hindi-font {
-  font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
-}
-
 /* Premium animations */
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+  0%, 100% { 
+    transform: translateY(0px); 
+  }
+  50% { 
+    transform: translateY(-10px); 
+  }
 }
 
 .animate-float {
@@ -44,10 +181,118 @@
 }
 
 @keyframes glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
-  50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.6); }
+  0%, 100% { 
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); 
+  }
+  50% { 
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.6); 
+  }
 }
 
 .animate-glow {
   animation: glow 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Modern card hover effects */
+.card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* Gradient text utilities */
+.gradient-text-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-secondary {
+  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Loading states */
+.loading-skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.1) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .glass-card {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  
+  body {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .glass-card {
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .animate-float,
+  .animate-glow,
+  .animate-shimmer {
+    animation: none;
+  }
+}
+
+/* Print styles */
+@media print {
+  .glass-card {
+    background: white;
+    border: 1px solid #ccc;
+    color: black;
+  }
+  
+  .gradient-text-primary,
+  .gradient-text-secondary,
+  .gradient-text-success {
+    color: black;
+    -webkit-text-fill-color: unset;
+  }
 }
