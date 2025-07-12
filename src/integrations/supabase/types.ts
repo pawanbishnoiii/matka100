@@ -263,6 +263,75 @@ export type Database = {
           },
         ]
       }
+      manual_deposits: {
+        Row: {
+          admin_notes: string | null
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          notes: string | null
+          payment_method: string
+          processed_at: string | null
+          processed_by: string | null
+          screenshot_url: string | null
+          status: string
+          transaction_id: string | null
+          updated_at: string
+          user_id: string
+          utr_number: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount: number
+          created_at?: string
+          currency?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          screenshot_url?: string | null
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+          user_id: string
+          utr_number: string
+        }
+        Update: {
+          admin_notes?: string | null
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          screenshot_url?: string | null
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+          user_id?: string
+          utr_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manual_deposits_processed_by_fkey"
+            columns: ["processed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manual_deposits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string | null

@@ -1,9 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Wallet, Plus, Minus, ArrowUpRight, ArrowDownLeft, CreditCard, Smartphone, Bitcoin, Building2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Wallet, Plus, Minus, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -156,44 +154,6 @@ export const WalletScreen = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Razorpay Integration */}
                 <RazorpayIntegration onSuccess={fetchUserData} />
-                
-                {/* Manual Payment Methods */}
-                <Card className="glass-card border-gray-700">
-                  <CardHeader>
-                    <CardTitle className="text-white flex items-center gap-2">
-                      <Building2 className="w-5 h-5 text-yellow-400" />
-                      Manual Deposit Methods
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 gap-3">
-                      <Button 
-                        variant="outline" 
-                        className="justify-start border-gray-600 text-gray-300 hover:bg-gray-700"
-                      >
-                        <Smartphone className="w-4 h-4 mr-3 text-green-400" />
-                        UPI Payment
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        className="justify-start border-gray-600 text-gray-300 hover:bg-gray-700"
-                      >
-                        <Building2 className="w-4 h-4 mr-3 text-blue-400" />
-                        Bank Transfer
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        className="justify-start border-gray-600 text-gray-300 hover:bg-gray-700"
-                      >
-                        <Bitcoin className="w-4 h-4 mr-3 text-orange-400" />
-                        USDT (TRC20)
-                      </Button>
-                    </div>
-                    <p className="text-xs text-gray-400 text-center">
-                      Manual verification required • 5-30 minutes processing
-                    </p>
-                  </CardContent>
-                </Card>
               </div>
             </TabsContent>
 

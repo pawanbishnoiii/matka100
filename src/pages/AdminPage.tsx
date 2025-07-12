@@ -22,7 +22,8 @@ import {
   Eye,
   Ban,
   UserCheck,
-  Wallet
+  Wallet,
+  CreditCard
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,6 +34,7 @@ import { AdminUserManager } from '@/components/admin/AdminUserManager';
 import { AdminPayoutManager } from '@/components/admin/AdminPayoutManager';
 import { AdminSettingsManager } from '@/components/admin/AdminSettingsManager';
 import { AdminAnalytics } from '@/components/admin/AdminAnalytics';
+import AdminManualDeposits from '@/components/admin/AdminManualDeposits';
 
 const AdminPage = () => {
   const { user, isAdmin } = useAuth();
@@ -43,7 +45,8 @@ const AdminPage = () => {
     totalBetVolume: 0,
     totalPayout: 0,
     pendingWithdrawals: 0,
-    totalRevenue: 0
+    totalRevenue: 0,
+    pendingDeposits: 0
   });
   const [loading, setLoading] = useState(true);
 
@@ -83,11 +86,18 @@ const AdminPage = () => {
         .eq('type', 'withdrawal')
         .eq('status', 'pending');
 
+      // Fetch pending manual deposits
+      const { data: pendingDepositsData } = await supabase
+        .from('manual_deposits')
+        .select('id')
+        .eq('status', 'pending');
+
       const totalPlayers = usersData?.length || 0;
       const activeToday = new Set(activeBetsData?.map(bet => bet.user_id)).size;
       const totalBetVolume = betsData?.reduce((sum, bet) => sum + Number(bet.amount_inr), 0) || 0;
       const totalPayout = betsData?.reduce((sum, bet) => sum + Number(bet.actual_win), 0) || 0;
       const pendingWithdrawals = withdrawalsData?.length || 0;
+      const pendingDeposits = pendingDepositsData?.length || 0;
       const totalRevenue = totalBetVolume - totalPayout;
 
       setStats({
@@ -96,7 +106,8 @@ const AdminPage = () => {
         totalBetVolume,
         totalPayout,
         pendingWithdrawals,
-        totalRevenue
+        totalRevenue,
+        pendingDeposits
       });
     } catch (error) {
       console.error('Error fetching admin stats:', error);
@@ -171,7 +182,7 @@ const AdminPage = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4 mb-8"
         >
           <Card className="glass-card border-gray-700 neon-blue-glow">
             <CardContent className="p-4 text-center">
@@ -209,13 +220,21 @@ const AdminPage = () => {
             <CardContent className="p-4 text-center">
               <AlertTriangle className="w-6 h-6 text-red-400 mx-auto mb-2" />
               <p className="text-xl font-bold text-white">{loading ? '...' : stats.pendingWithdrawals}</p>
-              <p className="text-xs text-gray-400">Pending</p>
+              <p className="text-xs text-gray-400">Pending W/D</p>
+            </CardContent>
+          </Card>
+
+          <Card className="glass-card border-gray-700 neon-orange-glow">
+            <CardContent className="p-4 text-center">
+              <CreditCard className="w-6 h-6 text-orange-400 mx-auto mb-2" />
+              <p className="text-xl font-bold text-white">{loading ? '...' : stats.pendingDeposits}</p>
+              <p className="text-xs text-gray-400">Manual Deposits</p>
             </CardContent>
           </Card>
 
           <Card className="glass-card border-gray-700 neon-glow">
             <CardContent className="p-4 text-center">
-              <TrendingUp className="w-6 h-6 text-orange-400 mx-auto mb-2" />
+              <TrendingUp className="w-6 h-6 text-cyan-400 mx-auto mb-2" />
               <p className="text-xl font-bold text-white">₹{loading ? '...' : (stats.totalRevenue / 1000).toFixed(0)}K</p>
               <p className="text-xs text-gray-400">Revenue</p>
             </CardContent>
@@ -229,7 +248,7 @@ const AdminPage = () => {
           transition={{ delay: 0.2 }}
         >
           <Tabs defaultValue="games" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5 glass-card p-1">
+            <TabsList className="grid w-full grid-cols-6 glass-card p-1">
               <TabsTrigger value="games" className="data-[state=active]:bg-blue-600 text-white">
                 <Gamepad2 className="w-4 h-4 mr-2" />
                 Games
@@ -237,6 +256,10 @@ const AdminPage = () => {
               <TabsTrigger value="users" className="data-[state=active]:bg-green-600 text-white">
                 <Users className="w-4 h-4 mr-2" />
                 Users
+              </TabsTrigger>
+              <TabsTrigger value="deposits" className="data-[state=active]:bg-orange-600 text-white">
+                <CreditCard className="w-4 h-4 mr-2" />
+                Deposits
               </TabsTrigger>
               <TabsTrigger value="payouts" className="data-[state=active]:bg-yellow-600 text-white">
                 <DollarSign className="w-4 h-4 mr-2" />
@@ -246,7 +269,7 @@ const AdminPage = () => {
                 <Settings className="w-4 h-4 mr-2" />
                 Settings
               </TabsTrigger>
-              <TabsTrigger value="analytics" className="data-[state=active]:bg-orange-600 text-white">
+              <TabsTrigger value="analytics" className="data-[state=active]:bg-cyan-600 text-white">
                 <TrendingUp className="w-4 h-4 mr-2" />
                 Analytics
               </TabsTrigger>
@@ -258,6 +281,10 @@ const AdminPage = () => {
 
             <TabsContent value="users">
               <AdminUserManager onStatsUpdate={fetchAdminStats} />
+            </TabsContent>
+
+            <TabsContent value="deposits">
+              <AdminManualDeposits />
             </TabsContent>
 
             <TabsContent value="payouts">

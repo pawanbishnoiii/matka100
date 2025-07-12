@@ -1,74 +1,86 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Smartphone, 
-  Building, 
-  Bitcoin, 
-  Save, 
-  Eye, 
-  EyeOff,
-  Copy,
-  Check
-} from 'lucide-react';
+import { CreditCard, Building2, Smartphone, DollarSign } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import ManualDepositForm from './ManualDepositForm';
+import ManualDepositHistory from './ManualDepositHistory';
 
 const PaymentMethodSetup = () => {
-  const [activeTab, setActiveTab] = useState<'upi' | 'bank' | 'usdt'>('upi');
-  const [showSensitive, setShowSensitive] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
-
-  const [paymentData, setPaymentData] = useState({
+  const [loading, setLoading] = useState(false);
+  const [withdrawalData, setWithdrawalData] = useState({
+    amount: '',
+    payment_method: 'upi',
     upi_id: '',
-    bank_account: {
-      account_holder_name: '',
-      account_number: '',
-      ifsc_code: '',
-      bank_name: ''
-    },
-    usdt_address: ''
+    bank_account: '',
+    ifsc_code: '',
+    account_holder: ''
   });
 
-  const handleSave = async () => {
+  const handleWithdrawal = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!user) return;
-    
+
+    if (!withdrawalData.amount || parseFloat(withdrawalData.amount) < 50) {
+      toast({
+        title: 'Invalid Amount',
+        description: 'Minimum withdrawal amount is ₹50',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
     try {
-      const updateData: any = {};
-      
-      if (activeTab === 'upi') {
-        updateData.upi_id = paymentData.upi_id;
-      } else if (activeTab === 'bank') {
-        updateData.bank_account = paymentData.bank_account;
-      } else if (activeTab === 'usdt') {
-        updateData.usdt_address = paymentData.usdt_address;
-      }
-
+      // Create withdrawal request
       const { error } = await supabase
-        .from('users')
-        .update(updateData)
-        .eq('id', user.id);
+        .from('transactions')
+        .insert({
+          user_id: user.id,
+          type: 'withdrawal',
+          amount: parseFloat(withdrawalData.amount),
+          currency: 'INR',
+          status: 'pending',
+          description: `Withdrawal request via ${withdrawalData.payment_method}`,
+          payment_method: withdrawalData.payment_method as any,
+          metadata: {
+            upi_id: withdrawalData.upi_id || null,
+            bank_account: withdrawalData.bank_account || null,
+            ifsc_code: withdrawalData.ifsc_code || null,
+            account_holder: withdrawalData.account_holder || null
+          }
+        });
 
       if (error) throw error;
 
       toast({
-        title: 'Success',
-        description: 'Payment method saved successfully',
+        title: 'Withdrawal Requested',
+        description: 'Your withdrawal request has been submitted for processing',
+      });
+
+      setWithdrawalData({
+        amount: '',
+        payment_method: 'upi',
+        upi_id: '',
+        bank_account: '',
+        ifsc_code: '',
+        account_holder: ''
       });
     } catch (error) {
-      console.error('Error saving payment method:', error);
+      console.error('Error requesting withdrawal:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to save payment method',
+        title: 'Withdrawal Failed',
+        description: 'Failed to submit withdrawal request',
         variant: 'destructive',
       });
     } finally {
@@ -76,198 +88,155 @@ const PaymentMethodSetup = () => {
     }
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-    toast({
-      title: 'Copied',
-      description: 'Address copied to clipboard',
-    });
-  };
-
-  const tabs = [
-    { id: 'upi', label: 'UPI', icon: Smartphone, color: 'blue' },
-    { id: 'bank', label: 'Bank Account', icon: Building, color: 'green' },
-    { id: 'usdt', label: 'USDT TRC-20', icon: Bitcoin, color: 'orange' }
-  ];
-
   return (
-    <Card className="glass-card border-gray-700">
-      <CardHeader>
-        <CardTitle className="text-white hindi-font">Payment Method Setup</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {/* Tab Navigation */}
-        <div className="flex gap-2 mb-6">
-          {tabs.map((tab) => (
-            <Button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`flex-1 ${
-                activeTab === tab.id 
-                  ? `neon-${tab.color}-glow bg-gradient-to-r from-${tab.color}-600 to-${tab.color}-700` 
-                  : 'glass-card hover:bg-gray-700/50'
-              }`}
-            >
-              <tab.icon className="w-4 h-4 mr-2" />
-              {tab.label}
-            </Button>
-          ))}
-        </div>
+    <div className="space-y-6">
+      <Tabs defaultValue="deposit" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3 glass-card p-1">
+          <TabsTrigger value="deposit" className="data-[state=active]:bg-green-600 text-white">
+            Manual Deposit
+          </TabsTrigger>
+          <TabsTrigger value="withdrawal" className="data-[state=active]:bg-red-600 text-white">
+            Withdrawal
+          </TabsTrigger>
+          <TabsTrigger value="history" className="data-[state=active]:bg-blue-600 text-white">
+            Deposit History
+          </TabsTrigger>
+        </TabsList>
 
-        {/* UPI Setup */}
-        {activeTab === 'upi' && (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-4"
-          >
-            <div>
-              <Label className="text-white">UPI ID</Label>
-              <div className="relative">
-                <Input
-                  type="text"
-                  value={paymentData.upi_id}
-                  onChange={(e) => setPaymentData({ ...paymentData, upi_id: e.target.value })}
-                  className="bg-gray-800/50 border-gray-600 text-white"
-                  placeholder="Enter your UPI ID (e.g., username@paytm)"
-                />
-              </div>
-              <p className="text-sm text-gray-400 mt-1">
-                This UPI ID will be used for withdrawals
-              </p>
-            </div>
-          </motion.div>
-        )}
+        <TabsContent value="deposit">
+          <ManualDepositForm />
+        </TabsContent>
 
-        {/* Bank Account Setup */}
-        {activeTab === 'bank' && (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-4"
-          >
-            <div>
-              <Label className="text-white">Account Holder Name</Label>
-              <Input
-                type="text"
-                value={paymentData.bank_account.account_holder_name}
-                onChange={(e) => setPaymentData({ 
-                  ...paymentData, 
-                  bank_account: { ...paymentData.bank_account, account_holder_name: e.target.value }
-                })}
-                className="bg-gray-800/50 border-gray-600 text-white"
-                placeholder="Enter account holder name"
-              />
-            </div>
+        <TabsContent value="withdrawal">
+          <Card className="glass-card border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-red-400" />
+                Withdrawal Request
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleWithdrawal} className="space-y-6">
+                <div className="space-y-2">
+                  <Label className="text-gray-300">Withdrawal Amount</Label>
+                  <Input
+                    type="number"
+                    min="50"
+                    step="0.01"
+                    placeholder="Enter amount (Min: ₹50)"
+                    value={withdrawalData.amount}
+                    onChange={(e) => setWithdrawalData(prev => ({ ...prev, amount: e.target.value }))}
+                    className="bg-gray-800 border-gray-600 text-white"
+                    required
+                  />
+                  <p className="text-xs text-gray-400">Minimum withdrawal: ₹50 | Maximum: ₹50,000</p>
+                </div>
 
-            <div>
-              <Label className="text-white">Account Number</Label>
-              <div className="relative">
-                <Input
-                  type={showSensitive ? "text" : "password"}
-                  value={paymentData.bank_account.account_number}
-                  onChange={(e) => setPaymentData({ 
-                    ...paymentData, 
-                    bank_account: { ...paymentData.bank_account, account_number: e.target.value }
-                  })}
-                  className="pr-10 bg-gray-800/50 border-gray-600 text-white"
-                  placeholder="Enter account number"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowSensitive(!showSensitive)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                >
-                  {showSensitive ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <Label className="text-white">IFSC Code</Label>
-              <Input
-                type="text"
-                value={paymentData.bank_account.ifsc_code}
-                onChange={(e) => setPaymentData({ 
-                  ...paymentData, 
-                  bank_account: { ...paymentData.bank_account, ifsc_code: e.target.value.toUpperCase() }
-                })}
-                className="bg-gray-800/50 border-gray-600 text-white"
-                placeholder="Enter IFSC code"
-              />
-            </div>
-
-            <div>
-              <Label className="text-white">Bank Name</Label>
-              <Input
-                type="text"
-                value={paymentData.bank_account.bank_name}
-                onChange={(e) => setPaymentData({ 
-                  ...paymentData, 
-                  bank_account: { ...paymentData.bank_account, bank_name: e.target.value }
-                })}
-                className="bg-gray-800/50 border-gray-600 text-white"
-                placeholder="Enter bank name"
-              />
-            </div>
-          </motion.div>
-        )}
-
-        {/* USDT TRC-20 Setup */}
-        {activeTab === 'usdt' && (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-4"
-          >
-            <div>
-              <Label className="text-white">USDT TRC-20 Wallet Address</Label>
-              <div className="relative">
-                <Input
-                  type="text"
-                  value={paymentData.usdt_address}
-                  onChange={(e) => setPaymentData({ ...paymentData, usdt_address: e.target.value })}
-                  className="pr-10 bg-gray-800/50 border-gray-600 text-white font-mono text-sm"
-                  placeholder="Enter your USDT TRC-20 wallet address"
-                />
-                {paymentData.usdt_address && (
-                  <button
-                    type="button"
-                    onClick={() => copyToClipboard(paymentData.usdt_address)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                <div className="space-y-2">
+                  <Label className="text-gray-300">Payment Method</Label>
+                  <Select 
+                    value={withdrawalData.payment_method} 
+                    onValueChange={(value) => setWithdrawalData(prev => ({ ...prev, payment_method: value }))}
                   >
-                    {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
-                  </button>
+                    <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-800 border-gray-600">
+                      <SelectItem value="upi">
+                        <div className="flex items-center gap-2">
+                          <Smartphone className="w-4 h-4 text-green-400" />
+                          UPI
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="bank_transfer">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="w-4 h-4 text-blue-400" />
+                          Bank Transfer
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {withdrawalData.payment_method === 'upi' && (
+                  <div className="space-y-2">
+                    <Label className="text-gray-300">UPI ID</Label>
+                    <Input
+                      type="text"
+                      placeholder="Enter your UPI ID"
+                      value={withdrawalData.upi_id}
+                      onChange={(e) => setWithdrawalData(prev => ({ ...prev, upi_id: e.target.value }))}
+                      className="bg-gray-800 border-gray-600 text-white"
+                      required
+                    />
+                  </div>
                 )}
-              </div>
-              <p className="text-sm text-gray-400 mt-1">
-                Only TRC-20 network addresses are supported
-              </p>
-            </div>
 
-            <div className="p-4 bg-orange-600/20 rounded-lg border border-orange-600/30">
-              <h4 className="text-orange-400 font-semibold mb-2">Important Notes:</h4>
-              <ul className="text-sm text-gray-300 space-y-1">
-                <li>• Only use USDT TRC-20 wallet addresses</li>
-                <li>• Double-check your address before saving</li>
-                <li>• Wrong addresses may result in permanent loss of funds</li>
-              </ul>
-            </div>
-          </motion.div>
-        )}
+                {withdrawalData.payment_method === 'bank_transfer' && (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-gray-300">Account Holder Name</Label>
+                      <Input
+                        type="text"
+                        placeholder="Enter account holder name"
+                        value={withdrawalData.account_holder}
+                        onChange={(e) => setWithdrawalData(prev => ({ ...prev, account_holder: e.target.value }))}
+                        className="bg-gray-800 border-gray-600 text-white"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-gray-300">Account Number</Label>
+                      <Input
+                        type="text"
+                        placeholder="Enter account number"
+                        value={withdrawalData.bank_account}
+                        onChange={(e) => setWithdrawalData(prev => ({ ...prev, bank_account: e.target.value }))}
+                        className="bg-gray-800 border-gray-600 text-white"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-gray-300">IFSC Code</Label>
+                      <Input
+                        type="text"
+                        placeholder="Enter IFSC code"
+                        value={withdrawalData.ifsc_code}
+                        onChange={(e) => setWithdrawalData(prev => ({ ...prev, ifsc_code: e.target.value }))}
+                        className="bg-gray-800 border-gray-600 text-white"
+                        required
+                      />
+                    </div>
+                  </div>
+                )}
 
-        <Button 
-          onClick={handleSave}
-          disabled={loading}
-          className="w-full mt-6 neon-glow bg-gradient-to-r from-green-600 to-emerald-600"
-        >
-          <Save className="w-4 h-4 mr-2" />
-          {loading ? 'Saving...' : 'Save Payment Method'}
-        </Button>
-      </CardContent>
-    </Card>
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white"
+                >
+                  {loading ? 'Processing...' : 'Request Withdrawal'}
+                </Button>
+
+                <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4">
+                  <h4 className="text-yellow-400 font-semibold mb-2">Withdrawal Information</h4>
+                  <ul className="text-sm text-gray-300 space-y-1">
+                    <li>• Processing time: 2-24 hours</li>
+                    <li>• Minimum amount: ₹50</li>
+                    <li>• Maximum amount: ₹50,000 per day</li>
+                    <li>• Small processing fee may apply</li>
+                  </ul>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="history">
+          <ManualDepositHistory />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 
