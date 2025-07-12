@@ -1,12 +1,14 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import AppLayout from "@/components/layout/AppLayout";
 import Index from "./pages/Index";
 import UltraModernLandingPage from "./pages/UltraModernLandingPage";
-import GameScreen from "./pages/GameScreen";
+import MobileGamePage from "./pages/MobileGamePage";
 import GamesListPage from "./pages/GamesListPage";
 import ResultsPage from "./pages/ResultsPage";
 import WalletPage from "./pages/WalletPage";
@@ -27,16 +29,23 @@ function App() {
           <Sonner />
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<UltraModernLandingPage />} />
-              <Route path="/classic" element={<Index />} />
+              {/* Auth routes (no layout) */}
               <Route path="/auth" element={<AuthPage />} />
-              <Route path="/games" element={<GamesListPage />} />
-              <Route path="/game/:gameId" element={<GameScreen />} />
-              <Route path="/results" element={<ResultsPage />} />
-              <Route path="/wallet" element={<WalletPage />} />
-              <Route path="/profile" element={<EnhancedProfilePage />} />
-              <Route path="/profile/edit" element={<ProfilePage />} />
               <Route path="/admin" element={<AdminPage />} />
+              
+              {/* App routes with layout */}
+              <Route element={<AppLayout />}>
+                <Route path="/" element={<UltraModernLandingPage />} />
+                <Route path="/classic" element={<Index />} />
+                <Route path="/games" element={<MobileGamePage />} />
+                <Route path="/games-list" element={<GamesListPage />} />
+                <Route path="/game/:gameId" element={<MobileGamePage />} />
+                <Route path="/results" element={<ResultsPage />} />
+                <Route path="/wallet" element={<WalletPage />} />
+                <Route path="/profile" element={<EnhancedProfilePage />} />
+                <Route path="/profile/edit" element={<ProfilePage />} />
+              </Route>
+              
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
