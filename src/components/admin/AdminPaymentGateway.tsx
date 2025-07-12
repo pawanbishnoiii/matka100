@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { CreditCard, Save, Settings, DollarSign, Banknote, CheckCircle, AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import { CreditCard, Save, Settings, DollarSign, Banknote, CheckCircle, AlertTriangle, Eye, EyeOff, TestTube, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -31,8 +31,9 @@ export const AdminPaymentGateway = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
   const [showSecrets, setShowSecrets] = useState(false);
-  const [razorpayStatus, setRazorpayStatus] = useState<'unknown' | 'configured' | 'missing'>('unknown');
+  const [razorpayStatus, setRazorpayStatus] = useState<'unknown' | 'configured' | 'missing' | 'error'>('unknown');
   const [settings, setSettings] = useState<PaymentSettings>({
     razorpay_key_id: '',
     razorpay_key_secret: '',
@@ -97,7 +98,7 @@ export const AdminPaymentGateway = () => {
       }
     } catch (error) {
       console.error('Error fetching payment settings:', error);
-      setRazorpayStatus('missing');
+      setRazorpayStatus('error');
       toast({
         title: 'Error',
         description: 'Failed to fetch payment settings',
@@ -116,6 +117,10 @@ export const AdminPaymentGateway = () => {
         throw new Error('Razorpay Key ID should start with "rzp_"');
       }
 
+      if (settings.razorpay_key_secret && settings.razorpay_key_secret.length < 20) {
+        throw new Error('Razorpay Key Secret appears to be too short');
+      }
+
       const { error } = await supabase
         .from('payment_settings')
         .upsert(settings, { onConflict: 'id' });
@@ -130,7 +135,7 @@ export const AdminPaymentGateway = () => {
       }
 
       toast({
-        title: 'Success',
+        title: 'Success! ✅',
         description: 'Payment settings saved successfully',
       });
     } catch (error: any) {
@@ -149,13 +154,16 @@ export const AdminPaymentGateway = () => {
     if (!settings.razorpay_key_id || !settings.razorpay_key_secret) {
       toast({
         title: 'Missing Credentials',
-        description: 'Please enter Razorpay Key ID and Secret first',
+        description: 'Please enter and save Razorpay Key ID and Secret first',
         variant: 'destructive',
       });
       return;
     }
 
+    setTesting(true);
     try {
+      console.log('Testing Razorpay connection...');
+      
       // Test the connection by trying to create a small test order
       const { data, error } = await supabase.functions.invoke('razorpay-payment', {
         body: {
@@ -166,8 +174,11 @@ export const AdminPaymentGateway = () => {
         }
       });
 
+      console.log('Test response:', data, error);
+
       if (error) {
-        throw new Error(error.message);
+        console.error('Test connection error:', error);
+        throw new Error(error.message || 'Failed to connect to Razorpay API');
       }
 
       if (data && data.success) {
@@ -177,16 +188,18 @@ export const AdminPaymentGateway = () => {
         });
         setRazorpayStatus('configured');
       } else {
-        throw new Error(data?.error || 'Test failed');
+        throw new Error(data?.error || 'Test failed - invalid response from Razorpay');
       }
     } catch (error: any) {
       console.error('Razorpay test failed:', error);
+      setRazorpayStatus('error');
       toast({
-        title: 'Connection Failed',
-        description: error.message || 'Failed to connect to Razorpay',
+        title: 'Connection Failed ❌',
+        description: error.message || 'Failed to connect to Razorpay. Please check your credentials.',
         variant: 'destructive',
       });
-      setRazorpayStatus('missing');
+    } finally {
+      setTesting(false);
     }
   };
 
@@ -207,7 +220,7 @@ export const AdminPaymentGateway = () => {
         <Alert className="border-yellow-600 bg-yellow-900/20">
           <AlertTriangle className="h-4 w-4 text-yellow-400" />
           <AlertDescription className="text-yellow-300">
-            Razorpay is not configured. Users won't be able to make instant deposits until you add your Razorpay credentials below.
+            <strong>Razorpay Not Configured:</strong> Users won't be able to make instant deposits until you add your Razorpay credentials below.
           </AlertDescription>
         </Alert>
       )}
@@ -216,7 +229,16 @@ export const AdminPaymentGateway = () => {
         <Alert className="border-green-600 bg-green-900/20">
           <CheckCircle className="h-4 w-4 text-green-400" />
           <AlertDescription className="text-green-300">
-            Razorpay integration is active and ready to accept payments.
+            <strong>Razorpay Active:</strong> Integration is configured and ready to accept payments.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {razorpayStatus === 'error' && (
+        <Alert className="border-red-600 bg-red-900/20">
+          <AlertTriangle className="h-4 w-4 text-red-400" />
+          <AlertDescription className="text-red-300">
+            <strong>Configuration Error:</strong> There's an issue with your Razorpay setup. Please check your credentials.
           </AlertDescription>
         </Alert>
       )}
@@ -280,11 +302,22 @@ export const AdminPaymentGateway = () => {
           <div className="flex gap-2 pt-2">
             <Button
               onClick={testRazorpayConnection}
+              disabled={testing || !settings.razorpay_key_id || !settings.razorpay_key_secret}
               variant="outline"
               size="sm"
               className="border-blue-600 text-blue-400 hover:bg-blue-900/20"
             >
-              Test Connection
+              {testing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Testing...
+                </>
+              ) : (
+                <>
+                  <TestTube className="w-4 h-4 mr-2" />
+                  Test Connection
+                </>
+              )}
             </Button>
           </div>
         </CardContent>
@@ -440,7 +473,7 @@ export const AdminPaymentGateway = () => {
         >
           {saving ? (
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <Loader2 className="w-4 h-4 animate-spin" />
               Saving...
             </div>
           ) : (
