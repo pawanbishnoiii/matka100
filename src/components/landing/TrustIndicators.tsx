@@ -9,10 +9,19 @@ interface PaymentMethod {
 }
 
 interface TrustIndicatorsProps {
-  paymentMethods: PaymentMethod[];
+  paymentMethods?: PaymentMethod[];
 }
 
-export const TrustIndicators = ({ paymentMethods }: TrustIndicatorsProps) => {
+const defaultPaymentMethods: PaymentMethod[] = [
+  { name: 'UPI', logo: '📱', color: 'bg-blue-600' },
+  { name: 'PhonePe', logo: '💜', color: 'bg-purple-600' },
+  { name: 'Google Pay', logo: '🟢', color: 'bg-green-600' },
+  { name: 'Paytm', logo: '🔵', color: 'bg-blue-500' },
+  { name: 'Bank Transfer', logo: '🏦', color: 'bg-gray-600' },
+  { name: 'USDT TRC20', logo: '₮', color: 'bg-green-500' }
+];
+
+export const TrustIndicators = ({ paymentMethods = defaultPaymentMethods }: TrustIndicatorsProps) => {
   const trustBadges = [
     { icon: Shield, text: 'SSL Secured', color: 'text-green-400' },
     { icon: Award, text: 'RNG Certified', color: 'text-blue-400' },
@@ -46,6 +55,11 @@ export const TrustIndicators = ({ paymentMethods }: TrustIndicatorsProps) => {
     }
   ];
 
+  // Ensure we have valid arrays to map over
+  const validPaymentMethods = Array.isArray(paymentMethods) ? paymentMethods : defaultPaymentMethods;
+  const validTrustBadges = Array.isArray(trustBadges) ? trustBadges : [];
+  const validTestimonials = Array.isArray(testimonials) ? testimonials : [];
+
   return (
     <section className="py-16 bg-gradient-to-r from-black/50 to-gray-900/50">
       <div className="container mx-auto px-4">
@@ -60,7 +74,7 @@ export const TrustIndicators = ({ paymentMethods }: TrustIndicatorsProps) => {
             Trusted by 15,000+ Players
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-            {trustBadges.map((badge, index) => (
+            {validTrustBadges.map((badge, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, scale: 0.8 }}
@@ -87,7 +101,7 @@ export const TrustIndicators = ({ paymentMethods }: TrustIndicatorsProps) => {
             Secure Payment Methods
           </h3>
           <div className="flex flex-wrap justify-center gap-4">
-            {paymentMethods.map((method, index) => (
+            {validPaymentMethods.map((method, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, x: -20 }}
@@ -114,7 +128,7 @@ export const TrustIndicators = ({ paymentMethods }: TrustIndicatorsProps) => {
             What Our Winners Say
           </h3>
           <div className="grid md:grid-cols-3 gap-6">
-            {testimonials.map((testimonial, index) => (
+            {validTestimonials.map((testimonial, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 30 }}
