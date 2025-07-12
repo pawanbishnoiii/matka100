@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Wallet, Plus, Minus, ArrowUpRight, ArrowDownLeft, CreditCard, Smartphone, Bitcoin, Building2 } from 'lucide-react';
@@ -508,3 +507,6 @@ export const WalletScreen = () => {
     </div>
   );
 };
+
+// Add default export
+export default WalletScreen;

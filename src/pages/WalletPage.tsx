@@ -1,7 +1,7 @@
 
 import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
-import { WalletScreen } from '../components/WalletScreen';
+import WalletScreen from '../components/WalletScreen';
 import { Button } from '../components/ui/button';
 
 const WalletPage = () => {
