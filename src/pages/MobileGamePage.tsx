@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Zap, Trophy, Users, Clock } from 'lucide-react';
@@ -10,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import EnhancedNumberBoard from '@/components/game/EnhancedNumberBoard';
 import BettingPanel from '@/components/game/BettingPanel';
+import confetti from 'canvas-confetti';
 
 const MobileGamePage = () => {
   const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
@@ -79,14 +79,12 @@ const MobileGamePage = () => {
       duration: 4000,
     });
 
-    // Simulate confetti or celebration
-    if (window.confetti) {
-      window.confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
-    }
+    // Trigger confetti celebration
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
   };
 
   if (!user) {
