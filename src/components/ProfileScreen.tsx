@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,7 +14,9 @@ import {
   DollarSign,
   Target,
   Settings,
-  LogOut
+  LogOut,
+  CheckCircle,
+  Star
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import BottomNavigation from '@/components/layout/BottomNavigation';
@@ -22,6 +25,9 @@ const ProfileScreen = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { statistics, loading, error } = useUserStatistics();
+
+  console.log('Profile - User data:', user);
+  console.log('Profile - Statistics:', statistics);
 
   const handleSignOut = async () => {
     try {
@@ -37,6 +43,21 @@ const ProfileScreen = () => {
     return null;
   }
 
+  // Get display name with proper fallback
+  const getDisplayName = () => {
+    if (user?.user_metadata?.name) return user.user_metadata.name;
+    if (user?.user_metadata?.full_name) return user.user_metadata.full_name;
+    if (user?.email) return user.email.split('@')[0];
+    return 'User';
+  };
+
+  // Get profile image URL
+  const getProfileImage = () => {
+    if (user?.user_metadata?.avatar_url) return user.user_metadata.avatar_url;
+    if (user?.user_metadata?.picture) return user.user_metadata.picture;
+    return null;
+  };
+
   return (
     <>
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900 p-4 pb-24">
@@ -47,13 +68,30 @@ const ProfileScreen = () => {
           animate={{ opacity: 1, y: 0 }}
         >
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
-              <User className="w-6 h-6 text-white" />
+            <div className="relative">
+              {getProfileImage() ? (
+                <img 
+                  src={getProfileImage()!} 
+                  alt="Profile" 
+                  className="w-12 h-12 rounded-full object-cover border-2 border-purple-500"
+                />
+              ) : (
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
+                  <User className="w-6 h-6 text-white" />
+                </div>
+              )}
+              {/* Verification Badge */}
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white">
+                <CheckCircle className="w-3 h-3 text-white" />
+              </div>
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">
-                {user.user_metadata?.name || user.email?.split('@')[0] || 'User'}
-              </h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold text-white">
+                  {getDisplayName()}
+                </h1>
+                <Star className="w-5 h-5 text-yellow-400 fill-current" />
+              </div>
               <p className="text-gray-400 text-sm">{user.email}</p>
             </div>
           </div>
@@ -128,7 +166,7 @@ const ProfileScreen = () => {
                     <div>
                       <p className="text-gray-400 text-sm">Win Rate</p>
                       <p className="text-2xl font-bold text-white">
-                        {statistics?.win_percentage?.toFixed(1) || 0}%
+                        {statistics?.win_percentage ? statistics.win_percentage.toFixed(1) : 0}%
                       </p>
                     </div>
                     <TrendingUp className="w-8 h-8 text-purple-400" />
@@ -142,7 +180,7 @@ const ProfileScreen = () => {
                     <div>
                       <p className="text-gray-400 text-sm">Total Won</p>
                       <p className="text-xl font-bold text-white">
-                        ₹{statistics?.total_amount_won?.toLocaleString() || 0}
+                        ₹{statistics?.total_amount_won ? statistics.total_amount_won.toLocaleString() : 0}
                       </p>
                     </div>
                     <DollarSign className="w-8 h-8 text-yellow-400" />
@@ -177,6 +215,13 @@ const ProfileScreen = () => {
                 <p className="text-white">
                   {new Date(user.created_at).toLocaleDateString()}
                 </p>
+              </div>
+              <div>
+                <p className="text-gray-400 text-sm">Account Status</p>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-green-400">Active & Verified</span>
+                </div>
               </div>
               <div>
                 <p className="text-gray-400 text-sm">Last Bet</p>

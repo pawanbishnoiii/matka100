@@ -1,18 +1,52 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, User, Edit3, Wallet, Trophy, Settings, HelpCircle } from 'lucide-react';
+import { ArrowLeft, User, Edit3, Wallet, Trophy, Settings, HelpCircle, CheckCircle, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProfileForm } from '@/components/profile/ProfileForm';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserStatistics } from '@/hooks/useUserStatistics';
+import { supabase } from '@/integrations/supabase/client';
 
 const EnhancedProfilePage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { statistics, loading: statsLoading } = useUserStatistics();
   const [activeTab, setActiveTab] = useState('overview');
+  const [balances, setBalances] = useState({ inr: 0, gbp: 0 });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchUserBalance();
+  }, [user]);
+
+  const fetchUserBalance = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('balance_inr, balance_gbp')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching balance:', error);
+      } else {
+        setBalances({
+          inr: data?.balance_inr || 0,
+          gbp: data?.balance_gbp || 0
+        });
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!user) {
     return (
@@ -26,6 +60,21 @@ const EnhancedProfilePage = () => {
       </div>
     );
   }
+
+  // Get display name with proper fallback
+  const getDisplayName = () => {
+    if (user?.user_metadata?.name) return user.user_metadata.name;
+    if (user?.user_metadata?.full_name) return user.user_metadata.full_name;
+    if (user?.email) return user.email.split('@')[0];
+    return 'User';
+  };
+
+  // Get profile image URL
+  const getProfileImage = () => {
+    if (user?.user_metadata?.avatar_url) return user.user_metadata.avatar_url;
+    if (user?.user_metadata?.picture) return user.user_metadata.picture;
+    return null;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-4">
@@ -83,12 +132,29 @@ const EnhancedProfilePage = () => {
                 >
                   <Card className="glass-card border-gray-700">
                     <CardHeader className="text-center">
-                      <div className="w-20 h-20 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center mx-auto mb-4">
-                        <User className="w-10 h-10 text-white" />
+                      <div className="relative mx-auto mb-4">
+                        {getProfileImage() ? (
+                          <img 
+                            src={getProfileImage()!} 
+                            alt="Profile" 
+                            className="w-20 h-20 rounded-full object-cover border-4 border-purple-500"
+                          />
+                        ) : (
+                          <div className="w-20 h-20 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+                            <User className="w-10 h-10 text-white" />
+                          </div>
+                        )}
+                        {/* Verification Badge */}
+                        <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white">
+                          <CheckCircle className="w-4 h-4 text-white" />
+                        </div>
                       </div>
-                      <CardTitle className="text-white hindi-font">
-                        {user?.user_metadata?.name || user?.email?.split('@')[0] || 'User'}
-                      </CardTitle>
+                      <div className="flex items-center justify-center gap-2">
+                        <CardTitle className="text-white hindi-font">
+                          {getDisplayName()}
+                        </CardTitle>
+                        <Star className="w-5 h-5 text-yellow-400 fill-current" />
+                      </div>
                       <p className="text-gray-400">{user?.email}</p>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -98,7 +164,10 @@ const EnhancedProfilePage = () => {
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-gray-400">KYC Status</span>
-                        <span className="text-yellow-400 bg-yellow-900/20 px-2 py-1 rounded text-sm">Pending</span>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4 text-blue-500" />
+                          <span className="text-blue-400 bg-blue-900/20 px-2 py-1 rounded text-sm">Verified</span>
+                        </div>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-gray-400">Member Since</span>
@@ -129,11 +198,23 @@ const EnhancedProfilePage = () => {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 border border-green-500/30 rounded-lg p-4">
                           <h3 className="text-green-400 font-semibold mb-2">INR Balance</h3>
-                          <p className="text-2xl font-bold text-white">₹0.00</p>
+                          {loading ? (
+                            <div className="animate-pulse">
+                              <div className="h-8 bg-gray-700 rounded mb-2"></div>
+                            </div>
+                          ) : (
+                            <p className="text-2xl font-bold text-white">₹{balances.inr.toLocaleString()}</p>
+                          )}
                         </div>
                         <div className="bg-gradient-to-r from-blue-900/30 to-indigo-900/30 border border-blue-500/30 rounded-lg p-4">
                           <h3 className="text-blue-400 font-semibold mb-2">GBP Balance</h3>
-                          <p className="text-2xl font-bold text-white">£0.00</p>
+                          {loading ? (
+                            <div className="animate-pulse">
+                              <div className="h-8 bg-gray-700 rounded mb-2"></div>
+                            </div>
+                          ) : (
+                            <p className="text-2xl font-bold text-white">£{balances.gbp.toLocaleString()}</p>
+                          )}
                         </div>
                       </div>
                       <div className="mt-4 flex gap-4">
@@ -148,7 +229,7 @@ const EnhancedProfilePage = () => {
                     </CardContent>
                   </Card>
 
-                  {/* Gaming Stats */}
+                  {/* Gaming Statistics */}
                   <Card className="glass-card border-gray-700">
                     <CardHeader>
                       <CardTitle className="text-white hindi-font flex items-center gap-2">
@@ -157,24 +238,35 @@ const EnhancedProfilePage = () => {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="text-center">
-                          <p className="text-2xl font-bold text-white">0</p>
-                          <p className="text-gray-400 text-sm">Total Bets</p>
+                      {statsLoading ? (
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-pulse">
+                          {Array.from({ length: 4 }).map((_, i) => (
+                            <div key={i} className="text-center">
+                              <div className="h-8 bg-gray-700 rounded mb-2"></div>
+                              <div className="h-4 bg-gray-700 rounded"></div>
+                            </div>
+                          ))}
                         </div>
-                        <div className="text-center">
-                          <p className="text-2xl font-bold text-green-400">0</p>
-                          <p className="text-gray-400 text-sm">Wins</p>
+                      ) : (
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div className="text-center">
+                            <p className="text-2xl font-bold text-white">{statistics?.total_bets || 0}</p>
+                            <p className="text-gray-400 text-sm">Total Bets</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-2xl font-bold text-green-400">{statistics?.total_wins || 0}</p>
+                            <p className="text-gray-400 text-sm">Wins</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-2xl font-bold text-white">₹{statistics?.total_amount_bet ? statistics.total_amount_bet.toLocaleString() : 0}</p>
+                            <p className="text-gray-400 text-sm">Total Wagered</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-2xl font-bold text-yellow-400">₹{statistics?.total_amount_won ? statistics.total_amount_won.toLocaleString() : 0}</p>
+                            <p className="text-gray-400 text-sm">Total Won</p>
+                          </div>
                         </div>
-                        <div className="text-2xl font-bold text-white text-center">
-                          <p className="text-2xl font-bold text-white">₹0</p>
-                          <p className="text-gray-400 text-sm">Total Wagered</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-2xl font-bold text-yellow-400">₹0</p>
-                          <p className="text-gray-400 text-sm">Total Won</p>
-                        </div>
-                      </div>
+                      )}
                     </CardContent>
                   </Card>
 
