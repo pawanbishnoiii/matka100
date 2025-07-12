@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      bet_cart: {
+        Row: {
+          amount_inr: number
+          bet_type: Database["public"]["Enums"]["bet_type"]
+          created_at: string | null
+          game_id: string
+          id: string
+          number: number
+          potential_win: number
+          user_id: string
+        }
+        Insert: {
+          amount_inr: number
+          bet_type: Database["public"]["Enums"]["bet_type"]
+          created_at?: string | null
+          game_id: string
+          id?: string
+          number: number
+          potential_win: number
+          user_id: string
+        }
+        Update: {
+          amount_inr?: number
+          bet_type?: Database["public"]["Enums"]["bet_type"]
+          created_at?: string | null
+          game_id?: string
+          id?: string
+          number?: number
+          potential_win?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bet_cart_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bets: {
         Row: {
           actual_win: number | null
@@ -675,6 +716,22 @@ export type Database = {
       generate_unique_uui: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_current_user_email: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      is_admin_by_email: {
+        Args: { email_to_check?: string }
+        Returns: boolean
+      }
+      is_admin_context: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_admin_session: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
       update_user_balance: {
         Args: { user_uuid: string; amount: number; currency?: string }

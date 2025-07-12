@@ -2,25 +2,42 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Gamepad2 } from 'lucide-react';
-import NumberPad from '../components/NumberPad';
+import { EnhancedNumberPad } from '../components/EnhancedNumberPad';
+import { BetCart } from '../components/BetCart';
 import { Button } from '../components/ui/button';
 import { useToast } from '../hooks/use-toast';
+import { useParams } from 'react-router-dom';
 
 const GameScreen = () => {
+  const { gameId } = useParams();
   const [walletBalance] = useState(15750);
+  const [cartKey, setCartKey] = useState(0);
   const { toast } = useToast();
 
-  const handleBetPlace = (number: number, amount: number) => {
+  const handleCartUpdate = () => {
+    setCartKey(prev => prev + 1);
+  };
+
+  const handleBetPlaced = () => {
     toast({
-      title: "Bet Placed Successfully! 🎯",
-      description: `You bet ₹${amount} on number ${number}. Good luck!`,
+      title: "Bets Placed Successfully! 🎯",
+      description: "Good luck with your bets!",
       duration: 3000,
     });
+    setCartKey(prev => prev + 1);
   };
+
+  if (!gameId) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 flex items-center justify-center">
+        <div className="text-white text-xl">Game not found</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800">
-      {/* Header */}
+      {/* Header - Clean Design */}
       <motion.header 
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -39,8 +56,8 @@ const GameScreen = () => {
             <div className="flex items-center gap-3">
               <Gamepad2 className="w-8 h-8 text-yellow-400" />
               <div>
-                <h1 className="text-2xl font-bold text-white hindi-font">Play Game</h1>
-                <p className="text-sm text-gray-400">Choose your lucky number</p>
+                <h1 className="text-2xl font-bold text-white">Play Game</h1>
+                <p className="text-sm text-gray-400">Select numbers and place your bets</p>
               </div>
             </div>
           </div>
@@ -52,9 +69,29 @@ const GameScreen = () => {
         </div>
       </motion.header>
 
-      {/* Game Content */}
-      <div className="container mx-auto">
-        <NumberPad onBetPlace={handleBetPlace} walletBalance={walletBalance} />
+      {/* Game Content - Enhanced Layout */}
+      <div className="container mx-auto px-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Number Pad - Takes 2 columns on large screens */}
+          <div className="lg:col-span-2">
+            <div className="glass-card border-gray-700 p-6">
+              <h2 className="text-xl font-bold text-white mb-6">Select Your Numbers</h2>
+              <EnhancedNumberPad 
+                gameId={gameId} 
+                onCartUpdate={handleCartUpdate}
+              />
+            </div>
+          </div>
+
+          {/* Bet Cart - Takes 1 column */}
+          <div className="lg:col-span-1">
+            <BetCart 
+              key={cartKey}
+              gameId={gameId} 
+              onBetPlaced={handleBetPlaced}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Bottom Padding for Mobile Navigation */}

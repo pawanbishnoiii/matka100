@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -62,7 +63,7 @@ export const GameCharts = () => {
   
   const [game, setGame] = useState<Game | null>(null);
   const [results, setResults] = useState<GameResult[]>([]);
-  const [timeRange, setTimeRange] = useState('30'); // days
+  const [timeRange, setTimeRange] = useState('30');
   const [chartType, setChartType] = useState('line');
   const [loading, setLoading] = useState(true);
 
@@ -85,6 +86,11 @@ export const GameCharts = () => {
       setGame(data);
     } catch (error) {
       console.error('Error fetching game:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch game data',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -116,7 +122,6 @@ export const GameCharts = () => {
 
   const downloadChart = async () => {
     try {
-      // Create a simple CSV download for now
       const csvContent = [
         ['Date', 'Winning Number', 'Total Bets', 'Total Amount'],
         ...results.map(result => [
@@ -149,7 +154,6 @@ export const GameCharts = () => {
     }
   };
 
-  // Process data for different chart types
   const chartData = results.map(result => ({
     date: new Date(result.result_date).toLocaleDateString(),
     number: result.winning_number,
@@ -157,7 +161,6 @@ export const GameCharts = () => {
     amount: result.total_amount
   }));
 
-  // Number frequency data for pie chart
   const numberFrequency = results.reduce((acc, result) => {
     acc[result.winning_number] = (acc[result.winning_number] || 0) + 1;
     return acc;
@@ -180,7 +183,7 @@ export const GameCharts = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
+        {/* Header - Simplified */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <Button
@@ -193,10 +196,10 @@ export const GameCharts = () => {
               Back to Game
             </Button>
             <div>
-              <h1 className="text-4xl font-bold text-white hindi-font">
-                📊 {game?.name} Charts
+              <h1 className="text-3xl font-bold text-white">
+                {game?.name} Charts
               </h1>
-              <p className="text-gray-400 mt-2">Historical data and analysis</p>
+              <p className="text-gray-400">Historical data and analysis</p>
             </div>
           </div>
           
@@ -209,7 +212,7 @@ export const GameCharts = () => {
           </Button>
         </div>
 
-        {/* Controls */}
+        {/* Controls - Clean Design */}
         <div className="flex flex-wrap gap-4 mb-8">
           <div>
             <label className="text-gray-300 text-sm block mb-2">Time Range</label>
@@ -242,9 +245,8 @@ export const GameCharts = () => {
           </div>
         </div>
 
-        {/* Charts */}
+        {/* Charts - Fixed JSX Structure */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          {/* Main Chart */}
           <Card className="glass-card border-gray-700 lg:col-span-2">
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
@@ -330,7 +332,7 @@ export const GameCharts = () => {
           </Card>
         </div>
 
-        {/* Statistics Cards */}
+        {/* Statistics Cards - Clean Design */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="glass-card border-gray-700">
             <CardContent className="p-6 text-center">
@@ -367,7 +369,7 @@ export const GameCharts = () => {
           </Card>
         </div>
 
-        {/* Recent Results Table */}
+        {/* Recent Results Table - Simplified */}
         <Card className="glass-card border-gray-700">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
