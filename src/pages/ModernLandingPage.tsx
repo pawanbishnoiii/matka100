@@ -503,7 +503,7 @@ const ModernLandingPage = () => {
       </motion.footer>
 
       {/* Custom Styles */}
-      <style jsx>{`
+      <style>{`
         .glass-card {
           background: rgba(255, 255, 255, 0.05);
           backdrop-filter: blur(10px);
