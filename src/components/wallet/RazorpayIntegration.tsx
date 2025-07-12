@@ -1,13 +1,11 @@
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { CreditCard, Zap } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { CreditCard, Loader2 } from 'lucide-react';
 
 declare global {
   interface Window {
@@ -15,57 +13,30 @@ declare global {
   }
 }
 
-const RazorpayIntegration = () => {
+interface RazorpayIntegrationProps {
+  onSuccess?: () => void;
+}
+
+export const RazorpayIntegration = ({ onSuccess }: RazorpayIntegrationProps) => {
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
-  const [razorpayConfig, setRazorpayConfig] = useState<any>(null);
-  const { user } = useAuth();
   const { toast } = useToast();
 
-  useEffect(() => {
-    // Load Razorpay script
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.async = true;
-    document.body.appendChild(script);
-
-    // Fetch Razorpay configuration
-    fetchRazorpayConfig();
-
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
-
-  const fetchRazorpayConfig = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('settings')
-        .select('value')
-        .eq('key', 'razorpay_config')
-        .single();
-
-      if (error) throw error;
-      setRazorpayConfig(data.value);
-    } catch (error) {
-      console.error('Error fetching Razorpay config:', error);
-    }
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
   };
 
   const handlePayment = async () => {
-    if (!user || !amount || !razorpayConfig?.key_id) {
+    if (!amount || parseFloat(amount) < 10) {
       toast({
         title: 'Error',
-        description: 'Please enter amount and ensure Razorpay is configured',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (!razorpayConfig.enabled) {
-      toast({
-        title: 'Error',
-        description: 'Razorpay payments are currently disabled',
+        description: 'Minimum deposit amount is ₹10',
         variant: 'destructive',
       });
       return;
@@ -74,94 +45,98 @@ const RazorpayIntegration = () => {
     setLoading(true);
 
     try {
-      const paymentAmount = parseFloat(amount);
-      
-      // Create transaction record
-      const { data: transaction, error: transactionError } = await supabase
-        .from('transactions')
-        .insert({
-          user_id: user.id,
-          type: 'deposit',
-          amount: paymentAmount,
-          status: 'pending',
-          payment_method: 'razorpay',
-          description: 'Razorpay deposit'
-        })
-        .select()
-        .single();
+      // Load Razorpay script
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        throw new Error('Failed to load Razorpay SDK');
+      }
 
-      if (transactionError) throw transactionError;
+      // Create order
+      const { data: orderData, error: orderError } = await supabase.functions.invoke(
+        'razorpay-payment',
+        {
+          body: {
+            amount: parseFloat(amount),
+            currency: 'INR',
+            receipt: `receipt_${Date.now()}`,
+            notes: {
+              purpose: 'Wallet deposit'
+            }
+          }
+        }
+      );
 
+      if (orderError) {
+        throw new Error(orderError.message || 'Failed to create order');
+      }
+
+      // Initialize Razorpay payment
       const options = {
-        key: razorpayConfig.key_id,
-        amount: paymentAmount * 100, // Convert to paisa
-        currency: 'INR',
-        name: 'Matka Platform',
-        description: 'Wallet Top-up',
-        order_id: transaction.id,
+        key: orderData.key,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: 'Matka100',
+        description: 'Wallet Deposit',
+        order_id: orderData.order_id,
         handler: async (response: any) => {
           try {
-            // Update transaction status
-            await supabase
-              .from('transactions')
-              .update({ 
-                status: 'completed',
-                external_id: response.razorpay_payment_id,
-                metadata: {
-                  payment_id: response.razorpay_payment_id,
-                  order_id: response.razorpay_order_id,
-                  signature: response.razorpay_signature
+            // Verify payment
+            const { error: verifyError } = await supabase.functions.invoke(
+              'razorpay-verify',
+              {
+                body: {
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
                 }
-              })
-              .eq('id', transaction.id);
+              }
+            );
 
-            // Update user balance
-            await supabase.rpc('update_user_balance', {
-              user_uuid: user.id,
-              amount: paymentAmount
-            });
+            if (verifyError) {
+              throw new Error(verifyError.message || 'Payment verification failed');
+            }
 
             toast({
-              title: 'Success',
-              description: `₹${paymentAmount} added to your wallet successfully`,
+              title: 'Success!',
+              description: `₹${amount} has been added to your wallet`,
             });
 
             setAmount('');
-          } catch (error) {
-            console.error('Payment success handler error:', error);
+            onSuccess?.();
+          } catch (error: any) {
+            console.error('Payment verification error:', error);
             toast({
-              title: 'Error',
-              description: 'Payment completed but failed to update balance. Contact support.',
+              title: 'Payment Error',
+              description: error.message || 'Payment verification failed',
               variant: 'destructive',
             });
           }
         },
-        modal: {
-          ondismiss: async () => {
-            // Update transaction status to cancelled
-            await supabase
-              .from('transactions')
-              .update({ status: 'cancelled' })
-              .eq('id', transaction.id);
-          }
-        },
         prefill: {
-          name: user.email,
-          email: user.email,
+          name: 'User',
+          email: 'user@example.com',
         },
         theme: {
           color: '#3B82F6'
+        },
+        modal: {
+          ondismiss: () => {
+            toast({
+              title: 'Payment Cancelled',
+              description: 'Payment was cancelled by user',
+              variant: 'destructive',
+            });
+          }
         }
       };
 
       const razorpay = new window.Razorpay(options);
       razorpay.open();
-
     } catch (error: any) {
       console.error('Payment error:', error);
       toast({
-        title: 'Error',
-        description: error.message || 'Payment failed',
+        title: 'Payment Error',
+        description: error.message || 'Failed to initiate payment',
         variant: 'destructive',
       });
     } finally {
@@ -169,84 +144,52 @@ const RazorpayIntegration = () => {
     }
   };
 
-  if (!razorpayConfig) {
-    return (
-      <Card className="glass-card border-gray-700">
-        <CardContent className="p-8 text-center">
-          <div className="animate-pulse text-white">Loading payment options...</div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-    >
-      <Card className="glass-card border-gray-700 neon-blue-glow">
-        <CardHeader>
-          <CardTitle className="text-white hindi-font flex items-center gap-2">
-            <CreditCard className="w-5 h-5 text-blue-400" />
-            Instant Payment
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div>
-            <label className="block text-white font-semibold mb-2">
-              Amount to Add (₹)
-            </label>
-            <Input
-              type="number"
-              step="0.01"
-              min="1"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="bg-gray-800/50 border-gray-600 text-white text-lg p-4"
-              placeholder="Enter amount"
-            />
-            <div className="grid grid-cols-4 gap-2 mt-3">
-              {[100, 500, 1000, 2000].map((value) => (
-                <Button
-                  key={value}
-                  onClick={() => setAmount(value.toString())}
-                  variant="outline"
-                  className="glass-card border-gray-600 hover:bg-gray-700/50"
-                >
-                  ₹{value}
-                </Button>
-              ))}
-            </div>
-          </div>
+    <Card className="glass-card border-gray-700">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-white">
+          <CreditCard className="w-5 h-5 text-blue-400" />
+          Instant Deposit via Razorpay
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Enter Amount (₹)
+          </label>
+          <Input
+            type="number"
+            placeholder="Minimum ₹10"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className="bg-gray-800/50 border-gray-600 text-white"
+            min="10"
+          />
+        </div>
+        
+        <Button
+          onClick={handlePayment}
+          disabled={loading || !amount}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Processing...
+            </>
+          ) : (
+            <>
+              <CreditCard className="w-4 h-4 mr-2" />
+              Pay ₹{amount || '0'} Now
+            </>
+          )}
+        </Button>
 
-          <div className="p-4 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-lg border border-blue-500/30">
-            <div className="flex items-center gap-2 mb-2">
-              <Zap className="w-5 h-5 text-yellow-400" />
-              <h4 className="text-white font-semibold">Instant Payment</h4>
-            </div>
-            <p className="text-gray-300 text-sm">
-              Pay securely with cards, UPI, net banking & wallets. Money gets added instantly to your account.
-            </p>
-          </div>
-
-          <Button
-            onClick={handlePayment}
-            disabled={loading || !amount || parseFloat(amount) <= 0 || !razorpayConfig?.enabled}
-            className="w-full neon-glow bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-4 text-lg"
-          >
-            <CreditCard className="w-5 h-5 mr-2" />
-            {loading ? 'Processing...' : `Pay ₹${amount || '0'} Now`}
-          </Button>
-
-          <div className="text-center">
-            <p className="text-xs text-gray-400">
-              Powered by Razorpay • 100% Secure • SSL Encrypted
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
+        <div className="text-xs text-gray-400 text-center">
+          <p>• Instant deposit • Secure payment • 24/7 available</p>
+          <p>• All major cards accepted • UPI supported</p>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
-
-export default RazorpayIntegration;
