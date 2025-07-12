@@ -181,5 +181,6 @@ const AdvancedToaster = forwardRef<ToasterRef, { defaultPosition?: Position }>(
   }
 );
 
+AdvancedToaster.displayName = 'AdvancedToaster';
+
 export default AdvancedToaster;
-export type { ToasterRef };

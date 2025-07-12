@@ -10,6 +10,16 @@ import BottomNavigation from '@/components/layout/BottomNavigation';
 import LiveStatistics from '@/components/stats/LiveStatistics';
 
 const ModernIndex = () => {
+  // Payment methods data for TrustIndicators
+  const paymentMethods = [
+    { name: 'UPI', logo: '📱', color: 'bg-blue-600' },
+    { name: 'PhonePe', logo: '💜', color: 'bg-purple-600' },
+    { name: 'Google Pay', logo: '🟢', color: 'bg-green-600' },
+    { name: 'Paytm', logo: '🔵', color: 'bg-blue-500' },
+    { name: 'Bank Transfer', logo: '🏦', color: 'bg-gray-600' },
+    { name: 'USDT TRC20', logo: '₮', color: 'bg-green-500' }
+  ];
+
   return (
     <>
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900">
@@ -75,7 +85,7 @@ const ModernIndex = () => {
         {/* Trust Indicators */}
         <section className="px-4 py-12">
           <div className="container mx-auto">
-            <TrustIndicators />
+            <TrustIndicators paymentMethods={paymentMethods} />
           </div>
         </section>
 
