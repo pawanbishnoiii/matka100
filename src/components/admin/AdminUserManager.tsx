@@ -73,19 +73,26 @@ export const AdminUserManager = ({ onStatsUpdate }: AdminUserManagerProps) => {
   }, []);
 
   const fetchUsers = async () => {
+    setLoading(true);
     try {
+      console.log('Fetching users...');
       const { data, error } = await supabase
         .from('users')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching users:', error);
+        throw error;
+      }
+
+      console.log('Users fetched successfully:', data?.length || 0, 'users');
       setUsers(data || []);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast({
         title: 'Error',
-        description: 'Failed to fetch users',
+        description: 'Failed to fetch users. Please check your admin permissions.',
         variant: 'destructive',
       });
     } finally {
@@ -208,7 +215,7 @@ export const AdminUserManager = ({ onStatsUpdate }: AdminUserManagerProps) => {
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-white hindi-font flex items-center gap-2">
           <Users className="w-6 h-6 text-green-400" />
-          User Management Dashboard
+          User Management Dashboard ({users.length} users)
         </CardTitle>
         <div className="flex items-center gap-4">
           <div className="relative">
@@ -220,178 +227,182 @@ export const AdminUserManager = ({ onStatsUpdate }: AdminUserManagerProps) => {
               className="pl-10 bg-gray-800 border-gray-600 text-white"
             />
           </div>
+          <Button onClick={fetchUsers} variant="outline" size="sm">
+            Refresh
+          </Button>
         </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {filteredUsers.map((user) => (
-            <motion.div
-              key={user.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="glass-card p-4 rounded-lg border border-gray-700"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-blue-600 flex items-center justify-center">
-                    {user.is_admin ? (
-                      <Shield className="w-6 h-6 text-white" />
-                    ) : (
-                      <Users className="w-6 h-6 text-white" />
-                    )}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-lg font-bold text-white">{user.name || 'No Name'}</h3>
-                      {user.is_admin && (
-                        <span className="px-2 py-1 bg-purple-600/20 text-purple-400 text-xs rounded">
-                          ADMIN
-                        </span>
+          {filteredUsers.length === 0 ? (
+            <div className="text-center text-gray-400 py-8">
+              {searchTerm ? 'No users found matching your search.' : 'No users found.'}
+            </div>
+          ) : (
+            filteredUsers.map((user) => (
+              <motion.div
+                key={user.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="glass-card p-4 rounded-lg border border-gray-700"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-blue-600 flex items-center justify-center">
+                      {user.is_admin ? (
+                        <Shield className="w-6 h-6 text-white" />
+                      ) : (
+                        <Users className="w-6 h-6 text-white" />
                       )}
                     </div>
-                    <p className="text-gray-400">{user.email}</p>
-                    <p className="text-sm text-gray-500">{user.phone || 'No phone'}</p>
-                  </div>
-                </div>
-
-                <div className="text-center">
-                  <p className="text-white font-bold">₹{user.balance_inr?.toLocaleString() || '0'}</p>
-                  <p className="text-gray-400 text-sm">Balance</p>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                    user.status === 'active'
-                      ? 'bg-green-600/20 text-green-400'
-                      : user.status === 'suspended'
-                      ? 'bg-yellow-600/20 text-yellow-400'
-                      : 'bg-red-600/20 text-red-400'
-                  }`}>
-                    {user.status?.toUpperCase() || 'UNKNOWN'}
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-bold text-white">{user.name || 'No Name'}</h3>
+                        {user.is_admin && (
+                          <span className="px-2 py-1 bg-purple-600/20 text-purple-400 text-xs rounded">
+                            ADMIN
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-gray-400">{user.email}</p>
+                      <p className="text-sm text-gray-500">{user.phone || 'No phone'}</p>
+                    </div>
                   </div>
 
-                  <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                    user.kyc_status === 'approved'
-                      ? 'bg-green-600/20 text-green-400'
-                      : user.kyc_status === 'rejected'
-                      ? 'bg-red-600/20 text-red-400'
-                      : 'bg-yellow-600/20 text-yellow-400'
-                  }`}>
-                    KYC: {user.kyc_status?.toUpperCase() || 'PENDING'}
+                  <div className="text-center">
+                    <p className="text-white font-bold">₹{user.balance_inr?.toLocaleString() || '0'}</p>
+                    <p className="text-gray-400 text-sm">Balance</p>
                   </div>
 
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setSelectedUser(user);
-                        setIsDialogOpen(true);
-                      }}
-                      className="border-gray-600 text-white hover:bg-gray-700"
-                    >
-                      <Wallet className="w-4 h-4" />
-                    </Button>
+                  <div className="flex items-center gap-3">
+                    <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      user.status === 'active'
+                        ? 'bg-green-600/20 text-green-400'
+                        : user.status === 'suspended'
+                        ? 'bg-yellow-600/20 text-yellow-400'
+                        : 'bg-red-600/20 text-red-400'
+                    }`}>
+                      {user.status?.toUpperCase() || 'UNKNOWN'}
+                    </div>
 
-                    {user.kyc_status === 'pending' && (
-                      <>
+                    <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      user.kyc_status === 'approved'
+                        ? 'bg-green-600/20 text-green-400'
+                        : user.kyc_status === 'rejected'
+                        ? 'bg-red-600/20 text-red-400'
+                        : 'bg-yellow-600/20 text-yellow-400'
+                    }`}>
+                      KYC: {user.kyc_status?.toUpperCase() || 'PENDING'}
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Dialog open={isDialogOpen && selectedUser?.id === user.id} onOpenChange={(open) => {
+                        setIsDialogOpen(open);
+                        if (open) setSelectedUser(user);
+                      }}>
+                        <DialogTrigger asChild>
+                          <Button size="sm" variant="outline" className="border-gray-600 text-white hover:bg-gray-700">
+                            <Wallet className="w-4 h-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="glass-card border-gray-700 text-white">
+                          <DialogHeader>
+                            <DialogTitle>
+                              Manage Balance - {selectedUser?.name || selectedUser?.email}
+                            </DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4">
+                            <div>
+                              <Label>Current Balance</Label>
+                              <p className="text-2xl font-bold text-green-400">
+                                ₹{selectedUser?.balance_inr?.toLocaleString() || '0'}
+                              </p>
+                            </div>
+
+                            <div>
+                              <Label>Action</Label>
+                              <Select value={balanceType} onValueChange={(value: 'add' | 'deduct') => setBalanceType(value)}>
+                                <SelectTrigger className="bg-gray-800 border-gray-600">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="add">Add Balance</SelectItem>
+                                  <SelectItem value="deduct">Deduct Balance</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div>
+                              <Label>Amount</Label>
+                              <Input
+                                type="number"
+                                placeholder="Enter amount"
+                                value={balanceAmount}
+                                onChange={(e) => setBalanceAmount(e.target.value)}
+                                className="bg-gray-800 border-gray-600 text-white"
+                              />
+                            </div>
+
+                            <div className="flex justify-end gap-2">
+                              <Button variant="outline" onClick={() => {
+                                setIsDialogOpen(false);
+                                setBalanceAmount('');
+                              }}>
+                                Cancel
+                              </Button>
+                              <Button 
+                                onClick={handleUpdateBalance}
+                                className={balanceType === 'add' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}
+                              >
+                                {balanceType === 'add' ? 'Add' : 'Deduct'} Balance
+                              </Button>
+                            </div>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+
+                      {user.kyc_status === 'pending' && (
+                        <>
+                          <Button
+                            size="sm"
+                            onClick={() => handleUpdateKycStatus(user.id, 'approved')}
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            <CheckCircle className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleUpdateKycStatus(user.id, 'rejected')}
+                          >
+                            <XCircle className="w-4 h-4" />
+                          </Button>
+                        </>
+                      )}
+
+                      {!user.is_admin && (
                         <Button
                           size="sm"
-                          onClick={() => handleUpdateKycStatus(user.id, 'approved')}
-                          className="bg-green-600 hover:bg-green-700"
+                          variant={user.status === 'active' ? 'destructive' : 'default'}
+                          onClick={() => handleUpdateUserStatus(
+                            user.id,
+                            user.status === 'active' ? 'suspended' : 'active'
+                          )}
                         >
-                          <CheckCircle className="w-4 h-4" />
+                          {user.status === 'active' ? (
+                            <Ban className="w-4 h-4" />
+                          ) : (
+                            <UserCheck className="w-4 h-4" />
+                          )}
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleUpdateKycStatus(user.id, 'rejected')}
-                        >
-                          <XCircle className="w-4 h-4" />
-                        </Button>
-                      </>
-                    )}
-
-                    {!user.is_admin && (
-                      <Button
-                        size="sm"
-                        variant={user.status === 'active' ? 'destructive' : 'default'}
-                        onClick={() => handleUpdateUserStatus(
-                          user.id,
-                          user.status === 'active' ? 'suspended' : 'active'
-                        )}
-                      >
-                        {user.status === 'active' ? (
-                          <Ban className="w-4 h-4" />
-                        ) : (
-                          <UserCheck className="w-4 h-4" />
-                        )}
-                      </Button>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            ))
+          )}
         </div>
-
-        {/* Balance Management Dialog */}
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="glass-card border-gray-700 text-white">
-            <DialogHeader>
-              <DialogTitle>
-                Manage Balance - {selectedUser?.name || selectedUser?.email}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label>Current Balance</Label>
-                <p className="text-2xl font-bold text-green-400">
-                  ₹{selectedUser?.balance_inr?.toLocaleString() || '0'}
-                </p>
-              </div>
-
-              <div>
-                <Label>Action</Label>
-                <Select value={balanceType} onValueChange={(value: 'add' | 'deduct') => setBalanceType(value)}>
-                  <SelectTrigger className="bg-gray-800 border-gray-600">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="add">Add Balance</SelectItem>
-                    <SelectItem value="deduct">Deduct Balance</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Amount</Label>
-                <Input
-                  type="number"
-                  placeholder="Enter amount"
-                  value={balanceAmount}
-                  onChange={(e) => setBalanceAmount(e.target.value)}
-                  className="bg-gray-800 border-gray-600 text-white"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => {
-                  setIsDialogOpen(false);
-                  setBalanceAmount('');
-                }}>
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleUpdateBalance}
-                  className={balanceType === 'add' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}
-                >
-                  {balanceType === 'add' ? 'Add' : 'Deduct'} Balance
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
       </CardContent>
     </Card>
   );

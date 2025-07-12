@@ -15,6 +15,7 @@ export const ProfileForm = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [fetchingData, setFetchingData] = useState(true);
   const [userData, setUserData] = useState({
     name: '',
     phone: '',
@@ -41,6 +42,7 @@ export const ProfileForm = () => {
   const fetchUserData = async () => {
     if (!user) return;
 
+    setFetchingData(true);
     try {
       const { data, error } = await supabase
         .from('users')
@@ -48,7 +50,10 @@ export const ProfileForm = () => {
         .eq('id', user.id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching user data:', error);
+        throw error;
+      }
 
       if (data) {
         setUserData({
@@ -72,9 +77,11 @@ export const ProfileForm = () => {
       console.error('Error fetching user data:', error);
       toast({
         title: 'Error',
-        description: 'Failed to fetch profile data',
+        description: 'Failed to fetch profile data. Please refresh the page.',
         variant: 'destructive',
       });
+    } finally {
+      setFetchingData(false);
     }
   };
 
@@ -100,7 +107,10 @@ export const ProfileForm = () => {
         })
         .eq('id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Profile update error:', error);
+        throw error;
+      }
 
       toast({
         title: 'Success',
@@ -110,7 +120,7 @@ export const ProfileForm = () => {
       console.error('Error updating profile:', error);
       toast({
         title: 'Error',
-        description: 'Failed to update profile',
+        description: 'Failed to update profile. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -121,6 +131,18 @@ export const ProfileForm = () => {
   const handleImageUpdate = (imageUrl: string) => {
     setUserData(prev => ({ ...prev, profile_image_url: imageUrl }));
   };
+
+  if (fetchingData) {
+    return (
+      <div className="w-full max-w-4xl mx-auto p-4">
+        <Card className="glass-card border-gray-700">
+          <CardContent className="p-8 text-center">
+            <div className="animate-pulse text-white">Loading profile data...</div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-4xl mx-auto p-4 space-y-6">
@@ -149,7 +171,7 @@ export const ProfileForm = () => {
           <div className="space-y-2">
             <Label className="text-white">Your UUI ID</Label>
             <Input
-              value={userData.uui_id || 'Loading...'}
+              value={userData.uui_id || 'Not Generated'}
               readOnly
               className="bg-gray-800 border-gray-600 text-white font-mono"
             />
@@ -157,7 +179,7 @@ export const ProfileForm = () => {
           <div className="space-y-2">
             <Label className="text-white">Your Referral Code</Label>
             <Input
-              value={userData.referral_code || 'Loading...'}
+              value={userData.referral_code || 'Not Generated'}
               readOnly
               className="bg-gray-800 border-gray-600 text-white font-mono"
             />
