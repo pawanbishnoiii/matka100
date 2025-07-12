@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -57,7 +58,7 @@ const Index = () => {
       opacity: 1,
       transition: {
         duration: 0.5,
-        ease: 'easeInOut',
+        ease: [0.4, 0, 0.2, 1], // Using cubic-bezier array instead of string
       },
     },
   };
@@ -84,7 +85,7 @@ const Index = () => {
             Experience the future of online gaming.
           </motion.p>
           <motion.div className="flex justify-center space-x-4" variants={itemVariants}>
-            <Button asChild variant="primary" size="lg">
+            <Button asChild variant="default" size="lg">
               <Link to="/games">Play Now</Link>
             </Button>
             <Button asChild variant="secondary" size="lg">
