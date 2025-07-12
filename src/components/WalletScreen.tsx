@@ -11,6 +11,7 @@ import TransactionHistory from './wallet/TransactionHistory';
 import PaymentMethodSetup from './wallet/PaymentMethodSetup';
 import P2PTransfer from './wallet/P2PTransfer';
 import { RazorpayIntegration } from './wallet/RazorpayIntegration';
+import EnhancedManualDepositForm from './wallet/EnhancedManualDepositForm';
 
 export const WalletScreen = () => {
   const { user } = useAuth();
@@ -38,7 +39,6 @@ export const WalletScreen = () => {
 
       if (error) {
         console.error('Error fetching user data:', error);
-        // If user doesn't exist in users table, try to create it
         if (error.code === 'PGRST116') {
           console.log('User not found in users table, creating...');
           const { error: insertError } = await supabase
@@ -59,7 +59,6 @@ export const WalletScreen = () => {
             throw insertError;
           }
           
-          // Fetch the newly created user
           const { data: newData, error: newError } = await supabase
             .from('users')
             .select('*')
@@ -152,7 +151,7 @@ export const WalletScreen = () => {
 
             <TabsContent value="deposit" className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Razorpay Integration */}
+                <EnhancedManualDepositForm />
                 <RazorpayIntegration onSuccess={fetchUserData} />
               </div>
             </TabsContent>
@@ -175,5 +174,4 @@ export const WalletScreen = () => {
   );
 };
 
-// Add default export
 export default WalletScreen;

@@ -1,53 +1,48 @@
 
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from '@/components/ui/toaster';
-import { AuthProvider } from '@/hooks/useAuth';
-import Index from './pages/Index';
-import GameScreen from './pages/GameScreen';
-import WalletPage from './pages/WalletPage';
-import ResultsPage from './pages/ResultsPage';
-import ProfilePage from './pages/ProfilePage';
-import AuthPage from './pages/AuthPage';
-import AdminPage from './pages/AdminPage';
-import GamesListPage from './pages/GamesListPage';
-import NotFound from './pages/NotFound';
-import { GameProfile } from './components/GameProfile';
-import { GameCharts } from './components/GameCharts';
-import './App.css';
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/hooks/useAuth";
+import Index from "./pages/Index";
+import ModernLandingPage from "./pages/ModernLandingPage";
+import GameScreen from "./pages/GameScreen";
+import GamesListPage from "./pages/GamesListPage";
+import ResultsPage from "./pages/ResultsPage";
+import WalletPage from "./pages/WalletPage";
+import EnhancedProfilePage from "./pages/EnhancedProfilePage";
+import ProfilePage from "./pages/ProfilePage";
+import AdminPage from "./pages/AdminPage";
+import AuthPage from "./pages/AuthPage";
+import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
-    },
-  },
-});
+const queryClient = new QueryClient();
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Router>
-          <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 overflow-x-hidden">
+      <TooltipProvider>
+        <AuthProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
             <Routes>
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<ModernLandingPage />} />
+              <Route path="/classic" element={<Index />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/games" element={<GamesListPage />} />
-              <Route path="/game/:gameId" element={<GameProfile />} />
-              <Route path="/game/:gameId/charts" element={<GameCharts />} />
-              <Route path="/game/:gameId/old" element={<GameScreen />} />
-              <Route path="/wallet" element={<WalletPage />} />
+              <Route path="/game/:gameId" element={<GameScreen />} />
               <Route path="/results" element={<ResultsPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/wallet" element={<WalletPage />} />
+              <Route path="/profile" element={<EnhancedProfilePage />} />
+              <Route path="/profile/edit" element={<ProfilePage />} />
               <Route path="/admin" element={<AdminPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-            <Toaster />
-          </div>
-        </Router>
-      </AuthProvider>
+          </BrowserRouter>
+        </AuthProvider>
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }
