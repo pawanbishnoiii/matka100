@@ -48,6 +48,8 @@ interface User {
   balance_inr: number;
 }
 
+type BetType = 'single_ank' | 'jodi' | 'single_patti' | 'double_patti' | 'triple_patti';
+
 export const GameProfile = () => {
   const { gameId } = useParams();
   const navigate = useNavigate();
@@ -59,7 +61,7 @@ export const GameProfile = () => {
   const [loading, setLoading] = useState(true);
   const [betAmount, setBetAmount] = useState('');
   const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
-  const [betType, setBetType] = useState<string>('single_ank');
+  const [betType, setBetType] = useState<BetType>('single_ank');
   const [recentResults, setRecentResults] = useState<any[]>([]);
 
   useEffect(() => {
@@ -304,7 +306,7 @@ export const GameProfile = () => {
                 {/* Bet Type Selection */}
                 <div>
                   <Label className="text-gray-300">Bet Type</Label>
-                  <Select value={betType} onValueChange={setBetType}>
+                  <Select value={betType} onValueChange={(value: BetType) => setBetType(value)}>
                     <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
                       <SelectValue />
                     </SelectTrigger>
