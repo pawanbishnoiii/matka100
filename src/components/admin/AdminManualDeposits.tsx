@@ -26,7 +26,7 @@ interface ManualDeposit {
   admin_notes: string | null;
   created_at: string;
   processed_at: string | null;
-  users: {
+  user_details: {
     name: string | null;
     email: string;
     uui_id: string | null;
@@ -54,7 +54,7 @@ const AdminManualDeposits = () => {
         .from('manual_deposits')
         .select(`
           *,
-          users:user_id (
+          users!manual_deposits_user_id_fkey (
             name,
             email,
             uui_id
@@ -67,9 +67,22 @@ const AdminManualDeposits = () => {
       }
 
       const { data, error } = await query;
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
-      setDeposits(data || []);
+      // Transform the data to match our interface
+      const transformedData = (data || []).map(deposit => ({
+        ...deposit,
+        user_details: deposit.users ? {
+          name: deposit.users.name,
+          email: deposit.users.email,
+          uui_id: deposit.users.uui_id
+        } : null
+      }));
+
+      setDeposits(transformedData);
     } catch (error) {
       console.error('Error fetching manual deposits:', error);
       toast({
@@ -221,8 +234,8 @@ const AdminManualDeposits = () => {
                           ₹{deposit.amount.toLocaleString()} - {deposit.payment_method.toUpperCase()}
                         </p>
                         <p className="text-sm text-gray-400">
-                          User: {deposit.users?.name || deposit.users?.email} 
-                          {deposit.users?.uui_id && ` (${deposit.users.uui_id})`}
+                          User: {deposit.user_details?.name || deposit.user_details?.email} 
+                          {deposit.user_details?.uui_id && ` (${deposit.user_details.uui_id})`}
                         </p>
                       </div>
                     </div>
