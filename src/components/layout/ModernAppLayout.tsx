@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -238,23 +239,20 @@ const ModernAppLayout: React.FC = () => {
                   )}
                   
                   {/* Icon Container */}
-                  <div className={cn(
-                    'p-2.5 rounded-xl transition-all duration-300',
+                  <div className={`p-2.5 rounded-xl transition-all duration-300 ${
                     active 
                       ? `bg-gradient-to-r ${item.gradient} shadow-lg` 
                       : 'bg-white/10 group-hover:bg-white/20'
-                  )}>
-                    <Icon className={cn(
-                      'w-5 h-5 transition-colors duration-300',
+                  }`}>
+                    <Icon className={`w-5 h-5 transition-colors duration-300 ${
                       active ? 'text-white' : 'text-gray-400 group-hover:text-white'
-                    )} />
+                    }`} />
                   </div>
                   
                   {/* Label */}
-                  <span className={cn(
-                    'text-xs font-medium transition-colors duration-300',
+                  <span className={`text-xs font-medium transition-colors duration-300 ${
                     active ? 'text-white' : 'text-gray-400 group-hover:text-white'
-                  )}>
+                  }`}>
                     {item.label}
                   </span>
                   
