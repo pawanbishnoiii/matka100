@@ -183,7 +183,7 @@ export const GameCharts = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
       <div className="container mx-auto px-4 py-8">
-        {/* Header - Simplified */}
+        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <Button
@@ -212,7 +212,7 @@ export const GameCharts = () => {
           </Button>
         </div>
 
-        {/* Controls - Clean Design */}
+        {/* Controls */}
         <div className="flex flex-wrap gap-4 mb-8">
           <div>
             <label className="text-gray-300 text-sm block mb-2">Time Range</label>
@@ -245,7 +245,7 @@ export const GameCharts = () => {
           </div>
         </div>
 
-        {/* Charts - Fixed JSX Structure */}
+        {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <Card className="glass-card border-gray-700 lg:col-span-2">
             <CardHeader>
@@ -332,7 +332,7 @@ export const GameCharts = () => {
           </Card>
         </div>
 
-        {/* Statistics Cards - Clean Design */}
+        {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="glass-card border-gray-700">
             <CardContent className="p-6 text-center">
@@ -369,7 +369,7 @@ export const GameCharts = () => {
           </Card>
         </div>
 
-        {/* Recent Results Table - Simplified */}
+        {/* Recent Results Table */}
         <Card className="glass-card border-gray-700">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">

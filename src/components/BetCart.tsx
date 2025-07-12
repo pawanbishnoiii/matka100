@@ -16,7 +16,7 @@ import { Trash2, ShoppingCart, Plus } from 'lucide-react';
 interface BetCartItem {
   id: string;
   number: number;
-  bet_type: string;
+  bet_type: 'single_ank' | 'jodi' | 'single_patti' | 'double_patti' | 'triple_patti';
   amount_inr: number;
   potential_win: number;
 }
@@ -96,12 +96,12 @@ export const BetCart = ({ gameId, onBetPlaced }: BetCartProps) => {
     try {
       setPlacingBets(true);
 
-      // Convert cart items to bet format
+      // Convert cart items to bet format with proper typing
       const betsToPlace = cartItems.map(item => ({
         user_id: user.id,
         game_id: gameId,
         numbers: [item.number],
-        bet_type: item.bet_type,
+        bet_type: item.bet_type as 'single_ank' | 'jodi' | 'single_patti' | 'double_patti' | 'triple_patti',
         amount_inr: item.amount_inr,
         potential_win: item.potential_win,
       }));
