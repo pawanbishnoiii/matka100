@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Also check database for admin status using the users table directly
+      // Check database for admin status using the users table directly
       const { data, error } = await supabase
         .from('users')
         .select('is_admin')

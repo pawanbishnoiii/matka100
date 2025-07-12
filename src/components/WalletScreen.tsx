@@ -40,16 +40,43 @@ export const WalletScreen = () => {
 
       if (error) {
         console.error('Error fetching user data:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to fetch profile data. Please refresh the page.',
-          variant: 'destructive',
-        });
-        return;
+        // If user doesn't exist in users table, try to create it
+        if (error.code === 'PGRST116') {
+          console.log('User not found in users table, creating...');
+          const { error: insertError } = await supabase
+            .from('users')
+            .insert({
+              id: user?.id,
+              email: user?.email || '',
+              name: user?.user_metadata?.name || user?.email?.split('@')[0] || 'User',
+              balance_inr: 0,
+              balance_gbp: 0,
+              status: 'active',
+              kyc_status: 'pending',
+              is_admin: user?.email === 'bnoy.studios@gmail.com'
+            });
+          
+          if (insertError) {
+            console.error('Error creating user:', insertError);
+            throw insertError;
+          }
+          
+          // Fetch the newly created user
+          const { data: newData, error: newError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', user?.id)
+            .single();
+          
+          if (newError) throw newError;
+          setUserData(newData);
+        } else {
+          throw error;
+        }
+      } else {
+        console.log('User data fetched successfully:', data);
+        setUserData(data);
       }
-
-      console.log('User data fetched successfully:', data);
-      setUserData(data);
     } catch (error) {
       console.error('Error in fetchUserData:', error);
       toast({

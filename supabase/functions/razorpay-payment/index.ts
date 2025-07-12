@@ -20,6 +20,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Payment request received');
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -36,20 +38,51 @@ serve(async (req) => {
     } = await supabaseClient.auth.getUser()
 
     if (!user) {
+      console.error('No user found');
       throw new Error('No user found')
     }
 
-    // Get Razorpay credentials from payment_settings
-    const { data: settings, error: settingsError } = await supabaseClient
+    console.log('User authenticated:', user.id);
+
+    // Get Razorpay credentials from payment_settings using service role
+    const supabaseService = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      { auth: { persistSession: false } }
+    );
+
+    const { data: settings, error: settingsError } = await supabaseService
       .from('payment_settings')
       .select('razorpay_key_id, razorpay_key_secret')
+      .limit(1)
       .single()
 
-    if (settingsError || !settings?.razorpay_key_id || !settings?.razorpay_key_secret) {
-      throw new Error('Razorpay not configured')
+    if (settingsError) {
+      console.error('Settings error:', settingsError);
+      // Create default settings if none exist
+      const { error: insertError } = await supabaseService
+        .from('payment_settings')
+        .insert({
+          razorpay_key_id: 'rzp_test_sample',
+          razorpay_key_secret: 'sample_secret',
+          min_deposit_amount: 10,
+          max_deposit_amount: 100000
+        });
+      
+      if (insertError) {
+        console.error('Failed to create default settings:', insertError);
+      }
+      
+      throw new Error('Razorpay not configured - please contact admin')
+    }
+
+    if (!settings?.razorpay_key_id || !settings?.razorpay_key_secret) {
+      throw new Error('Razorpay credentials not configured')
     }
 
     const { amount, currency = 'INR', receipt, notes }: PaymentRequest = await req.json()
+
+    console.log('Creating Razorpay order for amount:', amount);
 
     // Create Razorpay order
     const razorpayAuth = btoa(`${settings.razorpay_key_id}:${settings.razorpay_key_secret}`)
@@ -69,13 +102,16 @@ serve(async (req) => {
     })
 
     if (!orderResponse.ok) {
+      const errorText = await orderResponse.text();
+      console.error('Razorpay order creation failed:', errorText);
       throw new Error('Failed to create Razorpay order')
     }
 
     const order = await orderResponse.json()
+    console.log('Razorpay order created:', order.id);
 
-    // Store transaction record
-    const { error: transactionError } = await supabaseClient
+    // Store transaction record using service role
+    const { error: transactionError } = await supabaseService
       .from('transactions')
       .insert({
         user_id: user.id,

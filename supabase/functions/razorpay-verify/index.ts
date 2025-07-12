@@ -20,6 +20,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Payment verification request received');
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -41,10 +43,17 @@ serve(async (req) => {
 
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature }: VerifyRequest = await req.json()
 
-    // Get Razorpay secret
-    const { data: settings, error: settingsError } = await supabaseClient
+    // Get Razorpay secret using service role
+    const supabaseService = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      { auth: { persistSession: false } }
+    );
+
+    const { data: settings, error: settingsError } = await supabaseService
       .from('payment_settings')
       .select('razorpay_key_secret')
+      .limit(1)
       .single()
 
     if (settingsError || !settings?.razorpay_key_secret) {
@@ -61,8 +70,10 @@ serve(async (req) => {
       throw new Error('Invalid signature')
     }
 
-    // Get transaction
-    const { data: transaction, error: transactionError } = await supabaseClient
+    console.log('Payment signature verified successfully');
+
+    // Get transaction using service role
+    const { data: transaction, error: transactionError } = await supabaseService
       .from('transactions')
       .select('*')
       .eq('external_id', razorpay_order_id)
@@ -74,7 +85,7 @@ serve(async (req) => {
     }
 
     // Update transaction status
-    const { error: updateError } = await supabaseClient
+    const { error: updateError } = await supabaseService
       .from('transactions')
       .update({
         status: 'completed',
@@ -88,19 +99,23 @@ serve(async (req) => {
       .eq('id', transaction.id)
 
     if (updateError) {
+      console.error('Failed to update transaction:', updateError);
       throw new Error('Failed to update transaction')
     }
 
-    // Update user balance
-    const { error: balanceError } = await supabaseClient.rpc('update_user_balance', {
+    // Update user balance using the RPC function
+    const { error: balanceError } = await supabaseService.rpc('update_user_balance', {
       user_uuid: user.id,
       amount: transaction.amount,
       currency: transaction.currency || 'INR'
     })
 
     if (balanceError) {
+      console.error('Failed to update balance:', balanceError);
       throw new Error('Failed to update balance')
     }
+
+    console.log('Payment processed successfully, balance updated');
 
     return new Response(
       JSON.stringify({ success: true, message: 'Payment verified successfully' }),
