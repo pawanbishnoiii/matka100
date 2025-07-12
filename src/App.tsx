@@ -1,56 +1,45 @@
-
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/hooks/useAuth";
-import AppLayout from "@/components/layout/AppLayout";
-import Index from "./pages/Index";
-import UltraModernLandingPage from "./pages/UltraModernLandingPage";
-import MobileGamePage from "./pages/MobileGamePage";
-import GamesListPage from "./pages/GamesListPage";
-import ResultsPage from "./pages/ResultsPage";
-import WalletPage from "./pages/WalletPage";
-import EnhancedProfilePage from "./pages/EnhancedProfilePage";
-import ProfilePage from "./pages/ProfilePage";
-import AdminPage from "./pages/AdminPage";
-import AuthPage from "./pages/AuthPage";
-import NotFound from "./pages/NotFound";
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from 'react-query';
+import { Toaster } from 'react-hot-toast';
+import { Auth } from '@supabase/auth-ui-react';
+import { ThemeSupa } from '@supabase/auth-ui-shared';
+import { supabase } from './integrations/supabase/client';
+import Index from './pages/Index';
+import AuthPage from './pages/AuthPage';
+import GamesListPage from './pages/GamesListPage';
+import GameScreen from './pages/GameScreen';
+import MobileGamePage from './pages/MobileGamePage';
+import ResultsPage from './pages/ResultsPage';
+import WalletPage from './pages/WalletPage';
+import ProfileScreen from './components/ProfileScreen';
+import EnhancedProfilePage from './pages/EnhancedProfilePage';
+import AdminPage from './pages/AdminPage';
+import NotFound from './pages/NotFound';
+import HelpPage from '@/pages/HelpPage';
 
 const queryClient = new QueryClient();
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <AuthProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              {/* Auth routes (no layout) */}
-              <Route path="/auth" element={<AuthPage />} />
-              <Route path="/admin" element={<AdminPage />} />
-              
-              {/* App routes with layout */}
-              <Route element={<AppLayout />}>
-                <Route path="/" element={<UltraModernLandingPage />} />
-                <Route path="/classic" element={<Index />} />
-                <Route path="/games" element={<MobileGamePage />} />
-                <Route path="/games-list" element={<GamesListPage />} />
-                <Route path="/game/:gameId" element={<MobileGamePage />} />
-                <Route path="/results" element={<ResultsPage />} />
-                <Route path="/wallet" element={<WalletPage />} />
-                <Route path="/profile" element={<EnhancedProfilePage />} />
-                <Route path="/profile/edit" element={<ProfilePage />} />
-              </Route>
-              
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </AuthProvider>
-      </TooltipProvider>
+      <Toaster />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/games" element={<GamesListPage />} />
+          <Route path="/game/:gameId" element={<GameScreen />} />
+          <Route path="/mobile-game/:gameId" element={<MobileGamePage />} />
+          <Route path="/results" element={<ResultsPage />} />
+          <Route path="/wallet" element={<WalletPage />} />
+          <Route path="/profile" element={<EnhancedProfilePage />} />
+          <Route path="/profile-overview" element={<ProfileScreen />} />
+          <Route path="/help" element={<HelpPage />} />
+          <Route path="/admin" element={<AdminPage />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
     </QueryClientProvider>
   );
 }
