@@ -8,17 +8,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { WalletBalance } from './wallet/WalletBalance';
-import { TransactionHistory } from './wallet/TransactionHistory';
-import { PaymentMethodSetup } from './wallet/PaymentMethodSetup';
-import { P2PTransfer } from './wallet/P2PTransfer';
-import { RazorpayIntegration } from './wallet/RazorpayIntegration';
+import WalletBalance from './wallet/WalletBalance';
+import TransactionHistory from './wallet/TransactionHistory';
+import PaymentMethodSetup from './wallet/PaymentMethodSetup';
+import P2PTransfer from './wallet/P2PTransfer';
+import RazorpayIntegration from './wallet/RazorpayIntegration';
 
 export const WalletScreen = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [currency, setCurrency] = useState<'INR' | 'GBP'>('INR');
 
   useEffect(() => {
     if (user) {
@@ -95,7 +96,7 @@ export const WalletScreen = () => {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <WalletBalance userData={userData} onRefresh={fetchUserData} />
+          <WalletBalance currency={currency} onCurrencyChange={setCurrency} />
         </motion.div>
 
         {/* Main Content Tabs */}
