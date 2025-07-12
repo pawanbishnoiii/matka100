@@ -1,8 +1,9 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CreditCard, Settings, Database, Bell } from 'lucide-react';
+import { CreditCard, Settings, Database, Bell, Receipt } from 'lucide-react';
 import { AdminPaymentGateway } from './AdminPaymentGateway';
+import { AdminRazorpayPayments } from './AdminRazorpayPayments';
 
 export const AdminSettingsManager = () => {
   return (
@@ -16,16 +17,20 @@ export const AdminSettingsManager = () => {
       </div>
 
       <Tabs defaultValue="payments" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 glass-card p-1">
+        <TabsList className="grid w-full grid-cols-5 glass-card p-1">
           <TabsTrigger value="payments" className="data-[state=active]:bg-blue-600 text-white">
             <CreditCard className="w-4 h-4 mr-2" />
             Payment Gateway
           </TabsTrigger>
-          <TabsTrigger value="general" className="data-[state=active]:bg-green-600 text-white">
+          <TabsTrigger value="razorpay-payments" className="data-[state=active]:bg-green-600 text-white">
+            <Receipt className="w-4 h-4 mr-2" />
+            Razorpay Payments
+          </TabsTrigger>
+          <TabsTrigger value="general" className="data-[state=active]:bg-yellow-600 text-white">
             <Settings className="w-4 h-4 mr-2" />
             General
           </TabsTrigger>
-          <TabsTrigger value="database" className="data-[state=active]:bg-yellow-600 text-white">
+          <TabsTrigger value="database" className="data-[state=active]:bg-purple-600 text-white">
             <Database className="w-4 h-4 mr-2" />
             Database
           </TabsTrigger>
@@ -37,6 +42,10 @@ export const AdminSettingsManager = () => {
 
         <TabsContent value="payments">
           <AdminPaymentGateway />
+        </TabsContent>
+
+        <TabsContent value="razorpay-payments">
+          <AdminRazorpayPayments />
         </TabsContent>
 
         <TabsContent value="general">

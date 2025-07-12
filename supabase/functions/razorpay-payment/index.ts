@@ -23,7 +23,6 @@ serve(async (req) => {
     console.log('=== Razorpay Payment Request Started ===');
     console.log('Request method:', req.method);
     console.log('Request URL:', req.url);
-    console.log('Headers:', Object.fromEntries(req.headers.entries()));
 
     // Create Supabase client for user authentication
     const supabaseClient = createClient(
@@ -71,7 +70,6 @@ serve(async (req) => {
     if (settingsError) {
       console.error('Settings fetch error:', settingsError);
       
-      // If no settings exist, create default ones
       if (settingsError.code === 'PGRST116') {
         console.log('No payment settings found, creating default settings...');
         const { error: insertError } = await supabaseService
@@ -97,7 +95,6 @@ serve(async (req) => {
     console.log('Payment settings loaded:', { 
       hasKeyId: !!settings?.razorpay_key_id, 
       hasSecret: !!settings?.razorpay_key_secret,
-      keyIdLength: settings?.razorpay_key_id?.length,
       minAmount: settings?.min_deposit_amount,
       maxAmount: settings?.max_deposit_amount
     });
@@ -137,6 +134,23 @@ serve(async (req) => {
       throw new Error(`Maximum deposit amount is ₹${settings.max_deposit_amount || 100000}`)
     }
 
+    // Check for existing pending transactions to prevent duplicates
+    const { data: existingTransaction } = await supabaseService
+      .from('transactions')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('type', 'deposit')
+      .eq('status', 'pending')
+      .eq('amount', amount)
+      .gte('created_at', new Date(Date.now() - 5 * 60 * 1000).toISOString()) // Last 5 minutes
+      .limit(1)
+      .single();
+
+    if (existingTransaction) {
+      console.log('Duplicate transaction attempt blocked');
+      throw new Error('A similar deposit request is already pending. Please wait before trying again.')
+    }
+
     console.log('Creating Razorpay order for amount:', amount, 'currency:', currency);
 
     // Create Razorpay order
@@ -170,7 +184,6 @@ serve(async (req) => {
     })
 
     console.log('Razorpay API response status:', orderResponse.status);
-    console.log('Razorpay API response headers:', Object.fromEntries(orderResponse.headers.entries()));
 
     if (!orderResponse.ok) {
       const errorText = await orderResponse.text();
@@ -207,9 +220,9 @@ serve(async (req) => {
       status: order.status
     });
 
-    // Store transaction record using service role
+    // Only create transaction record after successful Razorpay order creation
     console.log('Creating transaction record...');
-    const { error: transactionError } = await supabaseService
+    const { data: transaction, error: transactionError } = await supabaseService
       .from('transactions')
       .insert({
         user_id: user.id,
@@ -227,14 +240,15 @@ serve(async (req) => {
           request_timestamp: new Date().toISOString()
         }
       })
+      .select()
+      .single()
 
     if (transactionError) {
       console.error('Transaction insert error:', transactionError)
-      // Don't fail the payment for this, just log it
-      console.log('Continuing despite transaction record error...')
-    } else {
-      console.log('Transaction record created successfully');
+      throw new Error('Failed to create transaction record')
     }
+
+    console.log('Transaction record created successfully:', transaction.id);
 
     const responseData = {
       success: true,
@@ -244,11 +258,11 @@ serve(async (req) => {
       key: settings.razorpay_key_id,
       receipt: order.receipt,
       created_at: order.created_at,
-      status: order.status
+      status: order.status,
+      transaction_id: transaction.id
     };
 
     console.log('=== Payment Request Completed Successfully ===');
-    console.log('Response data:', { ...responseData, key: responseData.key?.substring(0, 10) + '...' });
 
     return new Response(
       JSON.stringify(responseData),
@@ -262,18 +276,12 @@ serve(async (req) => {
     console.error('=== Razorpay Payment Error ===');
     console.error('Error message:', error?.message);
     console.error('Error stack:', error?.stack);
-    console.error('Error details:', error);
     
     return new Response(
       JSON.stringify({ 
         success: false,
         error: error?.message || 'Unknown error occurred',
-        timestamp: new Date().toISOString(),
-        debug: {
-          hasSupabaseUrl: !!Deno.env.get('SUPABASE_URL'),
-          hasSupabaseAnonKey: !!Deno.env.get('SUPABASE_ANON_KEY'),
-          hasSupabaseServiceKey: !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-        }
+        timestamp: new Date().toISOString()
       }),
       {
         status: 400,

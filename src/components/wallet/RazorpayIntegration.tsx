@@ -23,6 +23,7 @@ export const RazorpayIntegration = ({ onSuccess }: RazorpayIntegrationProps) => 
   const [loading, setLoading] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const loadRazorpayScript = () => {
@@ -38,6 +39,27 @@ export const RazorpayIntegration = ({ onSuccess }: RazorpayIntegrationProps) => 
       script.onerror = () => resolve(false);
       document.body.appendChild(script);
     });
+  };
+
+  const cancelPayment = async (orderId: string, reason: string) => {
+    try {
+      console.log('Cancelling payment for order:', orderId);
+      
+      const { data, error } = await supabase.functions.invoke('razorpay-cancel', {
+        body: {
+          order_id: orderId,
+          reason: reason
+        }
+      });
+
+      if (error) {
+        console.error('Payment cancellation error:', error);
+      } else {
+        console.log('Payment cancelled successfully:', data);
+      }
+    } catch (error) {
+      console.error('Failed to cancel payment:', error);
+    }
   };
 
   const handlePayment = async () => {
@@ -64,6 +86,7 @@ export const RazorpayIntegration = ({ onSuccess }: RazorpayIntegrationProps) => 
     setLoading(true);
     setPaymentStatus('processing');
     setErrorMessage('');
+    setCurrentOrderId(null);
 
     try {
       console.log('Starting payment process for amount:', amountValue);
@@ -109,12 +132,15 @@ export const RazorpayIntegration = ({ onSuccess }: RazorpayIntegrationProps) => 
           throw new Error('Payment system is not configured yet. Please contact support.');
         } else if (errorMsg.includes('credentials')) {
           throw new Error('Payment gateway configuration issue. Please contact support.');
+        } else if (errorMsg.includes('similar deposit request')) {
+          throw new Error('A similar deposit request is already pending. Please wait before trying again.');
         } else {
           throw new Error(errorMsg);
         }
       }
 
       console.log('Payment order created successfully:', orderData.order_id);
+      setCurrentOrderId(orderData.order_id);
 
       // Initialize Razorpay payment
       const options = {
@@ -157,6 +183,7 @@ export const RazorpayIntegration = ({ onSuccess }: RazorpayIntegrationProps) => 
             });
 
             setAmount('');
+            setCurrentOrderId(null);
             if (onSuccess) {
               onSuccess();
             }
@@ -182,10 +209,17 @@ export const RazorpayIntegration = ({ onSuccess }: RazorpayIntegrationProps) => 
           color: '#3B82F6'
         },
         modal: {
-          ondismiss: () => {
+          ondismiss: async () => {
             console.log('Payment cancelled by user');
+            
+            // Cancel the payment in backend if order was created
+            if (currentOrderId) {
+              await cancelPayment(currentOrderId, 'cancelled_by_user');
+            }
+            
             setLoading(false);
             setPaymentStatus('idle');
+            setCurrentOrderId(null);
             
             toast({
               title: 'Payment Cancelled',
@@ -202,9 +236,16 @@ export const RazorpayIntegration = ({ onSuccess }: RazorpayIntegrationProps) => 
 
     } catch (error: any) {
       console.error('Payment initialization error:', error);
+      
+      // Cancel any pending transaction if order was created
+      if (currentOrderId) {
+        await cancelPayment(currentOrderId, 'initialization_error');
+      }
+      
       setLoading(false);
       setPaymentStatus('error');
       setErrorMessage(error.message || 'Failed to initialize payment');
+      setCurrentOrderId(null);
       
       toast({
         title: 'Payment Error',
@@ -218,6 +259,7 @@ export const RazorpayIntegration = ({ onSuccess }: RazorpayIntegrationProps) => 
     setPaymentStatus('idle');
     setErrorMessage('');
     setAmount('');
+    setCurrentOrderId(null);
   };
 
   return (
