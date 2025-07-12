@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { CreditCard, Loader2 } from 'lucide-react';
+import { CreditCard, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 declare global {
   interface Window {
@@ -20,6 +21,8 @@ interface RazorpayIntegrationProps {
 export const RazorpayIntegration = ({ onSuccess }: RazorpayIntegrationProps) => {
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
   const { toast } = useToast();
 
   const loadRazorpayScript = () => {
@@ -33,42 +36,71 @@ export const RazorpayIntegration = ({ onSuccess }: RazorpayIntegrationProps) => 
   };
 
   const handlePayment = async () => {
-    if (!amount || parseFloat(amount) < 10) {
+    const amountValue = parseFloat(amount);
+    
+    if (!amount || amountValue < 10) {
       toast({
-        title: 'Error',
+        title: 'Invalid Amount',
         description: 'Minimum deposit amount is ₹10',
         variant: 'destructive',
       });
       return;
     }
 
+    if (amountValue > 100000) {
+      toast({
+        title: 'Amount Too High',
+        description: 'Maximum deposit amount is ₹100,000',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
+    setPaymentStatus('processing');
+    setErrorMessage('');
 
     try {
+      console.log('Starting payment process for amount:', amountValue);
+
       // Load Razorpay script
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) {
-        throw new Error('Failed to load Razorpay SDK');
+        throw new Error('Failed to load Razorpay SDK. Please check your internet connection.');
       }
 
+      console.log('Razorpay script loaded successfully');
+
       // Create order
+      console.log('Creating payment order...');
       const { data: orderData, error: orderError } = await supabase.functions.invoke(
         'razorpay-payment',
         {
           body: {
-            amount: parseFloat(amount),
+            amount: amountValue,
             currency: 'INR',
             receipt: `receipt_${Date.now()}`,
             notes: {
-              purpose: 'Wallet deposit'
+              purpose: 'Wallet deposit',
+              user_action: 'manual_deposit'
             }
           }
         }
       );
 
+      console.log('Order creation response:', { orderData, orderError });
+
       if (orderError) {
-        throw new Error(orderError.message || 'Failed to create order');
+        console.error('Order creation failed:', orderError);
+        throw new Error(orderError.message || 'Failed to create payment order');
       }
+
+      if (!orderData || !orderData.success) {
+        console.error('Invalid order response:', orderData);
+        throw new Error(orderData?.error || 'Invalid payment order response');
+      }
+
+      console.log('Payment order created successfully:', orderData.order_id);
 
       // Initialize Razorpay payment
       const options = {
@@ -80,8 +112,11 @@ export const RazorpayIntegration = ({ onSuccess }: RazorpayIntegrationProps) => 
         order_id: orderData.order_id,
         handler: async (response: any) => {
           try {
+            console.log('Payment completed, verifying...', response);
+            setPaymentStatus('processing');
+
             // Verify payment
-            const { error: verifyError } = await supabase.functions.invoke(
+            const { data: verifyData, error: verifyError } = await supabase.functions.invoke(
               'razorpay-verify',
               {
                 body: {
@@ -92,24 +127,37 @@ export const RazorpayIntegration = ({ onSuccess }: RazorpayIntegrationProps) => 
               }
             );
 
-            if (verifyError) {
-              throw new Error(verifyError.message || 'Payment verification failed');
+            console.log('Verification response:', { verifyData, verifyError });
+
+            if (verifyError || !verifyData?.success) {
+              console.error('Payment verification failed:', verifyError);
+              throw new Error(verifyError?.message || verifyData?.error || 'Payment verification failed');
             }
 
+            console.log('Payment verified successfully');
+            setPaymentStatus('success');
+
             toast({
-              title: 'Success!',
+              title: 'Payment Successful! 🎉',
               description: `₹${amount} has been added to your wallet`,
             });
 
             setAmount('');
-            onSuccess?.();
+            if (onSuccess) {
+              onSuccess();
+            }
           } catch (error: any) {
             console.error('Payment verification error:', error);
+            setPaymentStatus('error');
+            setErrorMessage(error.message || 'Payment verification failed');
+            
             toast({
-              title: 'Payment Error',
-              description: error.message || 'Payment verification failed',
+              title: 'Payment Verification Failed',
+              description: error.message || 'Please contact support if amount was deducted',
               variant: 'destructive',
             });
+          } finally {
+            setLoading(false);
           }
         },
         prefill: {
@@ -121,6 +169,10 @@ export const RazorpayIntegration = ({ onSuccess }: RazorpayIntegrationProps) => 
         },
         modal: {
           ondismiss: () => {
+            console.log('Payment cancelled by user');
+            setLoading(false);
+            setPaymentStatus('idle');
+            
             toast({
               title: 'Payment Cancelled',
               description: 'Payment was cancelled by user',
@@ -130,18 +182,28 @@ export const RazorpayIntegration = ({ onSuccess }: RazorpayIntegrationProps) => 
         }
       };
 
+      console.log('Opening Razorpay checkout...');
       const razorpay = new window.Razorpay(options);
       razorpay.open();
+
     } catch (error: any) {
-      console.error('Payment error:', error);
+      console.error('Payment initialization error:', error);
+      setLoading(false);
+      setPaymentStatus('error');
+      setErrorMessage(error.message || 'Failed to initialize payment');
+      
       toast({
         title: 'Payment Error',
         description: error.message || 'Failed to initiate payment',
         variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
     }
+  };
+
+  const resetPayment = () => {
+    setPaymentStatus('idle');
+    setErrorMessage('');
+    setAmount('');
   };
 
   return (
@@ -153,29 +215,60 @@ export const RazorpayIntegration = ({ onSuccess }: RazorpayIntegrationProps) => 
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {paymentStatus === 'error' && (
+          <Alert className="border-red-600 bg-red-900/20">
+            <AlertCircle className="h-4 w-4 text-red-400" />
+            <AlertDescription className="text-red-300">
+              {errorMessage}
+              <Button 
+                variant="link" 
+                size="sm" 
+                onClick={resetPayment}
+                className="text-red-400 hover:text-red-300 p-0 ml-2 h-auto"
+              >
+                Try Again
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {paymentStatus === 'success' && (
+          <Alert className="border-green-600 bg-green-900/20">
+            <CheckCircle className="h-4 w-4 text-green-400" />
+            <AlertDescription className="text-green-300">
+              Payment completed successfully! Your wallet has been updated.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">
             Enter Amount (₹)
           </label>
           <Input
             type="number"
-            placeholder="Minimum ₹10"
+            placeholder="Minimum ₹10, Maximum ₹100,000"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             className="bg-gray-800/50 border-gray-600 text-white"
             min="10"
+            max="100000"
+            disabled={loading || paymentStatus === 'processing'}
           />
+          <p className="text-xs text-gray-400 mt-1">
+            Enter amount between ₹10 and ₹100,000
+          </p>
         </div>
         
         <Button
           onClick={handlePayment}
-          disabled={loading || !amount}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+          disabled={loading || !amount || paymentStatus === 'processing'}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
         >
-          {loading ? (
+          {loading || paymentStatus === 'processing' ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Processing...
+              {paymentStatus === 'processing' ? 'Processing Payment...' : 'Initializing...'}
             </>
           ) : (
             <>
@@ -185,9 +278,10 @@ export const RazorpayIntegration = ({ onSuccess }: RazorpayIntegrationProps) => 
           )}
         </Button>
 
-        <div className="text-xs text-gray-400 text-center">
+        <div className="text-xs text-gray-400 text-center space-y-1">
           <p>• Instant deposit • Secure payment • 24/7 available</p>
           <p>• All major cards accepted • UPI supported</p>
+          <p>• Powered by Razorpay - India's most trusted payment gateway</p>
         </div>
       </CardContent>
     </Card>

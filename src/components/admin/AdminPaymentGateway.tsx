@@ -1,13 +1,13 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { CreditCard, Save, Settings, DollarSign, Banknote } from 'lucide-react';
+import { CreditCard, Save, Settings, DollarSign, Banknote, CheckCircle, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface PaymentSettings {
   id?: string;
@@ -30,6 +30,8 @@ export const AdminPaymentGateway = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showSecrets, setShowSecrets] = useState(false);
+  const [razorpayStatus, setRazorpayStatus] = useState<'unknown' | 'configured' | 'missing'>('unknown');
   const [settings, setSettings] = useState<PaymentSettings>({
     razorpay_key_id: '',
     razorpay_key_secret: '',
@@ -64,7 +66,7 @@ export const AdminPaymentGateway = () => {
       }
 
       if (data) {
-        setSettings({
+        const loadedSettings = {
           id: data.id,
           razorpay_key_id: data.razorpay_key_id || '',
           razorpay_key_secret: data.razorpay_key_secret || '',
@@ -79,10 +81,22 @@ export const AdminPaymentGateway = () => {
           min_withdrawal_amount: data.min_withdrawal_amount || 50,
           max_withdrawal_amount: data.max_withdrawal_amount || 50000,
           withdrawal_fee_percentage: data.withdrawal_fee_percentage || 2
-        });
+        };
+        
+        setSettings(loadedSettings);
+        
+        // Check Razorpay configuration status
+        if (loadedSettings.razorpay_key_id && loadedSettings.razorpay_key_secret) {
+          setRazorpayStatus('configured');
+        } else {
+          setRazorpayStatus('missing');
+        }
+      } else {
+        setRazorpayStatus('missing');
       }
     } catch (error) {
       console.error('Error fetching payment settings:', error);
+      setRazorpayStatus('missing');
       toast({
         title: 'Error',
         description: 'Failed to fetch payment settings',
@@ -96,25 +110,82 @@ export const AdminPaymentGateway = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
+      // Validate Razorpay credentials format
+      if (settings.razorpay_key_id && !settings.razorpay_key_id.startsWith('rzp_')) {
+        throw new Error('Razorpay Key ID should start with "rzp_"');
+      }
+
       const { error } = await supabase
         .from('payment_settings')
         .upsert(settings, { onConflict: 'id' });
 
       if (error) throw error;
 
+      // Update status after successful save
+      if (settings.razorpay_key_id && settings.razorpay_key_secret) {
+        setRazorpayStatus('configured');
+      } else {
+        setRazorpayStatus('missing');
+      }
+
       toast({
         title: 'Success',
         description: 'Payment settings saved successfully',
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving payment settings:', error);
       toast({
         title: 'Error',
-        description: 'Failed to save payment settings',
+        description: error.message || 'Failed to save payment settings',
         variant: 'destructive',
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const testRazorpayConnection = async () => {
+    if (!settings.razorpay_key_id || !settings.razorpay_key_secret) {
+      toast({
+        title: 'Missing Credentials',
+        description: 'Please enter Razorpay Key ID and Secret first',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      // Test the connection by trying to create a small test order
+      const { data, error } = await supabase.functions.invoke('razorpay-payment', {
+        body: {
+          amount: 1, // ₹1 for testing
+          currency: 'INR',
+          receipt: `test_${Date.now()}`,
+          notes: { test: 'connection_test' }
+        }
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (data && data.success) {
+        toast({
+          title: 'Connection Successful! ✅',
+          description: 'Razorpay integration is working properly',
+        });
+        setRazorpayStatus('configured');
+      } else {
+        throw new Error(data?.error || 'Test failed');
+      }
+    } catch (error: any) {
+      console.error('Razorpay test failed:', error);
+      toast({
+        title: 'Connection Failed',
+        description: error.message || 'Failed to connect to Razorpay',
+        variant: 'destructive',
+      });
+      setRazorpayStatus('missing');
     }
   };
 
@@ -130,12 +201,34 @@ export const AdminPaymentGateway = () => {
 
   return (
     <div className="space-y-6">
+      {/* Razorpay Status Alert */}
+      {razorpayStatus === 'missing' && (
+        <Alert className="border-yellow-600 bg-yellow-900/20">
+          <AlertTriangle className="h-4 w-4 text-yellow-400" />
+          <AlertDescription className="text-yellow-300">
+            Razorpay is not configured. Users won't be able to make instant deposits until you add your Razorpay credentials below.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {razorpayStatus === 'configured' && (
+        <Alert className="border-green-600 bg-green-900/20">
+          <CheckCircle className="h-4 w-4 text-green-400" />
+          <AlertDescription className="text-green-300">
+            Razorpay integration is active and ready to accept payments.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Razorpay Settings */}
       <Card className="glass-card border-gray-700">
         <CardHeader>
           <CardTitle className="text-white hindi-font flex items-center gap-2">
             <CreditCard className="w-6 h-6 text-blue-400" />
             Razorpay Configuration
+            {razorpayStatus === 'configured' && (
+              <CheckCircle className="w-5 h-5 text-green-400" />
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -143,23 +236,55 @@ export const AdminPaymentGateway = () => {
             <div className="space-y-2">
               <Label className="text-white">Razorpay Key ID</Label>
               <Input
-                type="password"
+                type="text"
                 value={settings.razorpay_key_id}
                 onChange={(e) => setSettings(prev => ({ ...prev, razorpay_key_id: e.target.value }))}
                 className="bg-gray-800 border-gray-600 text-white font-mono"
-                placeholder="rzp_live_xxxxxxxxxx"
+                placeholder="rzp_live_xxxxxxxxxx or rzp_test_xxxxxxxxxx"
               />
+              <p className="text-xs text-gray-400">
+                Get this from your Razorpay Dashboard → API Keys
+              </p>
             </div>
             <div className="space-y-2">
               <Label className="text-white">Razorpay Key Secret</Label>
-              <Input
-                type="password"
-                value={settings.razorpay_key_secret}
-                onChange={(e) => setSettings(prev => ({ ...prev, razorpay_key_secret: e.target.value }))}
-                className="bg-gray-800 border-gray-600 text-white font-mono"
-                placeholder="Secret key"
-              />
+              <div className="relative">
+                <Input
+                  type={showSecrets ? "text" : "password"}
+                  value={settings.razorpay_key_secret}
+                  onChange={(e) => setSettings(prev => ({ ...prev, razorpay_key_secret: e.target.value }))}
+                  className="bg-gray-800 border-gray-600 text-white font-mono pr-10"
+                  placeholder="Enter your secret key"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                  onClick={() => setShowSecrets(!showSecrets)}
+                >
+                  {showSecrets ? (
+                    <EyeOff className="w-4 h-4 text-gray-400" />
+                  ) : (
+                    <Eye className="w-4 h-4 text-gray-400" />
+                  )}
+                </Button>
+              </div>
+              <p className="text-xs text-gray-400">
+                Keep this secret and never share it publicly
+              </p>
             </div>
+          </div>
+          
+          <div className="flex gap-2 pt-2">
+            <Button
+              onClick={testRazorpayConnection}
+              variant="outline"
+              size="sm"
+              className="border-blue-600 text-blue-400 hover:bg-blue-900/20"
+            >
+              Test Connection
+            </Button>
           </div>
         </CardContent>
       </Card>

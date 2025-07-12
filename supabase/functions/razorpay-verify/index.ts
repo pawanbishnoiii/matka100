@@ -20,7 +20,7 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Payment verification request received');
+    console.log('=== Payment Verification Started ===');
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -38,10 +38,20 @@ serve(async (req) => {
     } = await supabaseClient.auth.getUser()
 
     if (!user) {
-      throw new Error('No user found')
+      console.error('Authentication failed: No user found');
+      throw new Error('Authentication required')
     }
 
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature }: VerifyRequest = await req.json()
+    console.log('User authenticated:', user.id);
+
+    const requestBody = await req.json();
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature }: VerifyRequest = requestBody;
+
+    console.log('Payment verification details:', {
+      orderId: razorpay_order_id,
+      paymentId: razorpay_payment_id,
+      hasSignature: !!razorpay_signature
+    });
 
     // Get Razorpay secret using service role
     const supabaseService = createClient(
@@ -50,6 +60,7 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
+    console.log('Fetching Razorpay secret...');
     const { data: settings, error: settingsError } = await supabaseService
       .from('payment_settings')
       .select('razorpay_key_secret')
@@ -57,22 +68,29 @@ serve(async (req) => {
       .single()
 
     if (settingsError || !settings?.razorpay_key_secret) {
-      throw new Error('Razorpay not configured')
+      console.error('Failed to fetch Razorpay secret:', settingsError);
+      throw new Error('Payment verification failed - configuration error')
     }
 
     // Verify signature
+    console.log('Verifying payment signature...');
     const body = razorpay_order_id + "|" + razorpay_payment_id;
     const expectedSignature = createHmac('sha256', settings.razorpay_key_secret)
       .update(body)
       .digest('hex');
 
     if (expectedSignature !== razorpay_signature) {
-      throw new Error('Invalid signature')
+      console.error('Signature verification failed', {
+        expected: expectedSignature,
+        received: razorpay_signature
+      });
+      throw new Error('Payment signature verification failed')
     }
 
     console.log('Payment signature verified successfully');
 
     // Get transaction using service role
+    console.log('Fetching transaction record...');
     const { data: transaction, error: transactionError } = await supabaseService
       .from('transactions')
       .select('*')
@@ -81,10 +99,14 @@ serve(async (req) => {
       .single()
 
     if (transactionError || !transaction) {
-      throw new Error('Transaction not found')
+      console.error('Transaction not found:', transactionError);
+      throw new Error('Transaction record not found')
     }
 
+    console.log('Transaction found:', { id: transaction.id, amount: transaction.amount });
+
     // Update transaction status
+    console.log('Updating transaction status to completed...');
     const { error: updateError } = await supabaseService
       .from('transactions')
       .update({
@@ -92,7 +114,8 @@ serve(async (req) => {
         metadata: {
           ...transaction.metadata,
           payment_id: razorpay_payment_id,
-          signature: razorpay_signature
+          signature: razorpay_signature,
+          verified_at: new Date().toISOString()
         },
         updated_at: new Date().toISOString()
       })
@@ -100,10 +123,13 @@ serve(async (req) => {
 
     if (updateError) {
       console.error('Failed to update transaction:', updateError);
-      throw new Error('Failed to update transaction')
+      throw new Error('Failed to update transaction status')
     }
 
+    console.log('Transaction updated successfully');
+
     // Update user balance using the RPC function
+    console.log('Updating user balance...');
     const { error: balanceError } = await supabaseService.rpc('update_user_balance', {
       user_uuid: user.id,
       amount: transaction.amount,
@@ -112,22 +138,36 @@ serve(async (req) => {
 
     if (balanceError) {
       console.error('Failed to update balance:', balanceError);
-      throw new Error('Failed to update balance')
+      throw new Error('Payment verified but balance update failed - contact support')
     }
 
-    console.log('Payment processed successfully, balance updated');
+    console.log('User balance updated successfully');
+    console.log('=== Payment Verification Completed Successfully ===');
 
     return new Response(
-      JSON.stringify({ success: true, message: 'Payment verified successfully' }),
+      JSON.stringify({ 
+        success: true, 
+        message: 'Payment verified and balance updated successfully',
+        amount: transaction.amount,
+        currency: transaction.currency || 'INR'
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
       }
     )
 
   } catch (error) {
-    console.error('Payment verification error:', error)
+    console.error('=== Payment Verification Error ===');
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        success: false,
+        error: error.message,
+        timestamp: new Date().toISOString()
+      }),
       {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
