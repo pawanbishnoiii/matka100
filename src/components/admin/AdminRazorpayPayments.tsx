@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { 
@@ -16,8 +17,19 @@ import {
   Clock,
   RefreshCw,
   Eye,
-  IndianRupee
+  IndianRupee,
+  AlertTriangle,
+  MessageSquare,
+  Ban
 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface RazorpayTransaction {
   id: string;
@@ -44,6 +56,11 @@ export const AdminRazorpayPayments = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<RazorpayTransaction | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [actionType, setActionType] = useState<'approve' | 'cancel' | 'view'>('view');
+  const [reason, setReason] = useState('');
+  const [processing, setProcessing] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -99,6 +116,88 @@ export const AdminRazorpayPayments = () => {
     });
   };
 
+  const handleTransactionAction = async () => {
+    if (!selectedTransaction) return;
+
+    setProcessing(true);
+    try {
+      if (actionType === 'approve' && selectedTransaction.status === 'pending') {
+        // Update transaction to completed and update user balance
+        const { error: updateError } = await supabase
+          .from('transactions')
+          .update({
+            status: 'completed',
+            metadata: {
+              ...selectedTransaction.metadata,
+              admin_approved: true,
+              admin_approved_at: new Date().toISOString(),
+              admin_reason: reason || 'Manually approved by admin'
+            },
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', selectedTransaction.id);
+
+        if (updateError) throw updateError;
+
+        // Update user balance
+        const { error: balanceError } = await supabase.rpc('update_user_balance', {
+          user_uuid: selectedTransaction.user_id,
+          amount: selectedTransaction.amount,
+          currency: selectedTransaction.currency || 'INR'
+        });
+
+        if (balanceError) throw balanceError;
+
+        toast({
+          title: 'Payment Approved',
+          description: `₹${selectedTransaction.amount} has been added to user's wallet`,
+        });
+      } else if (actionType === 'cancel') {
+        // Cancel transaction
+        const { error: cancelError } = await supabase
+          .from('transactions')
+          .update({
+            status: 'cancelled',
+            metadata: {
+              ...selectedTransaction.metadata,
+              admin_cancelled: true,
+              admin_cancelled_at: new Date().toISOString(),
+              cancellation_reason: reason || 'Cancelled by admin'
+            },
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', selectedTransaction.id);
+
+        if (cancelError) throw cancelError;
+
+        toast({
+          title: 'Payment Cancelled',
+          description: 'Transaction has been cancelled successfully',
+        });
+      }
+
+      await fetchTransactions();
+      setDialogOpen(false);
+      setReason('');
+    } catch (error) {
+      console.error('Error processing transaction:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to process transaction',
+        variant: 'destructive',
+      });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const openDialog = (transaction: RazorpayTransaction, action: 'approve' | 'cancel' | 'view') => {
+    setSelectedTransaction(transaction);
+    setActionType(action);
+    setDialogOpen(true);
+    setReason('');
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
@@ -108,7 +207,7 @@ export const AdminRazorpayPayments = () => {
       case 'failed':
         return <Badge className="bg-red-600/20 text-red-400 border-red-600/50"><XCircle className="w-3 h-3 mr-1" />Failed</Badge>;
       case 'cancelled':
-        return <Badge className="bg-gray-600/20 text-gray-400 border-gray-600/50"><XCircle className="w-3 h-3 mr-1" />Cancelled</Badge>;
+        return <Badge className="bg-gray-600/20 text-gray-400 border-gray-600/50"><Ban className="w-3 h-3 mr-1" />Cancelled</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
@@ -132,6 +231,7 @@ export const AdminRazorpayPayments = () => {
     pending: transactions.filter(t => t.status === 'pending').length,
     failed: transactions.filter(t => t.status === 'failed').length,
     cancelled: transactions.filter(t => t.status === 'cancelled').length,
+    totalAmount: transactions.reduce((sum, t) => sum + (t.status === 'completed' ? t.amount : 0), 0)
   };
 
   if (loading) {
@@ -140,7 +240,7 @@ export const AdminRazorpayPayments = () => {
         <div className="flex items-center gap-3 mb-6">
           <CreditCard className="w-8 h-8 text-blue-400" />
           <div>
-            <h2 className="text-2xl font-bold text-white">Razorpay Payments</h2>
+            <h2 className="text-2xl font-bold text-white">Razorpay Management</h2>
             <p className="text-gray-400">Monitor and manage Razorpay transactions</p>
           </div>
         </div>
@@ -159,13 +259,13 @@ export const AdminRazorpayPayments = () => {
       <div className="flex items-center gap-3 mb-6">
         <CreditCard className="w-8 h-8 text-blue-400" />
         <div>
-          <h2 className="text-2xl font-bold text-white">Razorpay Payments</h2>
+          <h2 className="text-2xl font-bold text-white">Razorpay Management</h2>
           <p className="text-gray-400">Monitor and manage Razorpay transactions</p>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+      {/* Enhanced Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
         <Card className="glass-card border-gray-700">
           <CardContent className="p-4">
             <div className="text-center">
@@ -206,13 +306,21 @@ export const AdminRazorpayPayments = () => {
             </div>
           </CardContent>
         </Card>
+        <Card className="glass-card border-blue-700/50">
+          <CardContent className="p-4">
+            <div className="text-center">
+              <div className="text-xl font-bold text-blue-400">₹{(stats.totalAmount / 1000).toFixed(0)}K</div>
+              <div className="text-sm text-gray-400">Revenue</div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Filters */}
+      {/* Filters and Controls */}
       <Card className="glass-card border-gray-700">
         <CardHeader>
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-            <CardTitle className="text-white">Transaction History</CardTitle>
+            <CardTitle className="text-white">Transaction Management</CardTitle>
             <div className="flex gap-4 items-center">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -280,33 +388,116 @@ export const AdminRazorpayPayments = () => {
                         </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-bold text-white text-lg">
-                        ₹{transaction.amount.toLocaleString()}
-                      </p>
-                      <p className="text-xs text-gray-400">{transaction.currency}</p>
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <p className="font-bold text-white text-lg">
+                          ₹{transaction.amount.toLocaleString()}
+                        </p>
+                        <p className="text-xs text-gray-400">{transaction.currency}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openDialog(transaction, 'view')}
+                          className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        {transaction.status === 'pending' && (
+                          <>
+                            <Button
+                              size="sm"
+                              onClick={() => openDialog(transaction, 'approve')}
+                              className="bg-green-600 hover:bg-green-700 text-white"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => openDialog(transaction, 'cancel')}
+                            >
+                              <XCircle className="w-4 h-4" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  
-                  {transaction.metadata && (
-                    <div className="mt-3 pt-3 border-t border-gray-700">
-                      <details className="text-xs text-gray-400">
-                        <summary className="cursor-pointer hover:text-gray-300">
-                          <Eye className="inline w-3 h-3 mr-1" />
-                          View Details
-                        </summary>
-                        <pre className="mt-2 p-2 bg-gray-800/50 rounded text-xs overflow-auto">
-                          {JSON.stringify(transaction.metadata, null, 2)}
-                        </pre>
-                      </details>
-                    </div>
-                  )}
                 </motion.div>
               ))
             )}
           </div>
         </CardContent>
       </Card>
+
+      {/* Action Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="bg-gray-900 border-gray-700 text-white">
+          <DialogHeader>
+            <DialogTitle>
+              {actionType === 'approve' ? 'Approve Payment' : 
+               actionType === 'cancel' ? 'Cancel Payment' : 'Transaction Details'}
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              {selectedTransaction && (
+                <div className="space-y-2 mt-4">
+                  <div className="flex justify-between">
+                    <span>User:</span>
+                    <span>{selectedTransaction.users.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Amount:</span>
+                    <span>₹{selectedTransaction.amount}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Order ID:</span>
+                    <span className="text-sm">{selectedTransaction.external_id}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Status:</span>
+                    <span>{getStatusBadge(selectedTransaction.status)}</span>
+                  </div>
+                </div>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {actionType !== 'view' && (
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-gray-300 mb-2 block">
+                  {actionType === 'approve' ? 'Approval Reason (Optional)' : 'Cancellation Reason'}
+                </label>
+                <Textarea
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder={actionType === 'approve' ? 'Enter approval reason...' : 'Enter cancellation reason...'}
+                  className="bg-gray-800 border-gray-600 text-white"
+                  rows={3}
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              {actionType === 'view' ? 'Close' : 'Cancel'}
+            </Button>
+            {actionType !== 'view' && (
+              <Button
+                onClick={handleTransactionAction}
+                disabled={processing}
+                className={actionType === 'approve' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}
+              >
+                {processing ? 'Processing...' : 
+                 actionType === 'approve' ? 'Approve Payment' : 'Cancel Payment'}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
