@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,6 +16,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { PremiumButton } from '@/components/ui/premium-modern-button';
 import { PremiumGlassCard } from '@/components/ui/premium-glass-card';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface NavigationItem {
   id: string;
