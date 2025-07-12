@@ -1,84 +1,121 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Wallet, Plus, Minus, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import {
+  CreditCard,
+  Wallet as WalletIcon,
+  Clock,
+  ArrowUpCircle,
+  ArrowDownCircle,
+  DollarSign,
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import WalletBalance from './wallet/WalletBalance';
-import TransactionHistory from './wallet/TransactionHistory';
-import PaymentMethodSetup from './wallet/PaymentMethodSetup';
-import P2PTransfer from './wallet/P2PTransfer';
-import { RazorpayIntegration } from './wallet/RazorpayIntegration';
-import EnhancedManualDepositForm from './wallet/EnhancedManualDepositForm';
+import { EnhancedManualDepositForm } from './wallet/EnhancedManualDepositForm';
+import { EnhancedWithdrawalForm } from './wallet/EnhancedWithdrawalForm';
 
-export const WalletScreen = () => {
+interface Transaction {
+  id: string;
+  user_id: string;
+  type: string;
+  amount: number;
+  currency: string;
+  status: string;
+  payment_method: string;
+  commission?: number;
+  metadata: any;
+  created_at: string;
+}
+
+const TransactionItem = ({ transaction }: { transaction: Transaction }) => {
+  const isDeposit = transaction.type === 'deposit';
+  const statusColors = {
+    pending: 'text-yellow-500',
+    completed: 'text-green-500',
+    failed: 'text-red-500',
+    cancelled: 'text-gray-500',
+  };
+
+  return (
+    <motion.div
+      className="glass-card p-4 rounded-lg border border-gray-700"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {isDeposit ? (
+            <ArrowUpCircle className="w-6 h-6 text-green-500" />
+          ) : (
+            <ArrowDownCircle className="w-6 h-6 text-red-500" />
+          )}
+          <div>
+            <p className="text-lg font-semibold text-white">
+              ₹{transaction.amount.toLocaleString()}
+            </p>
+            <p className="text-sm text-gray-400 capitalize">
+              {transaction.type} • {transaction.payment_method}
+            </p>
+            <p className="text-xs text-gray-500">
+              {new Date(transaction.created_at).toLocaleString()}
+            </p>
+          </div>
+        </div>
+        <div className="text-right">
+          <p className={`text-sm font-semibold ${statusColors[transaction.status]}`}>
+            {transaction.status}
+          </p>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+const WalletScreen = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [userData, setUserData] = useState<any>(null);
+  const [balance, setBalance] = useState(0);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currency, setCurrency] = useState<'INR' | 'GBP'>('INR');
 
   useEffect(() => {
-    if (user) {
-      fetchUserData();
-    }
-  }, [user]);
+    fetchData();
+  }, []);
 
-  const fetchUserData = async () => {
+  const fetchData = async () => {
+    if (!user) return;
+
+    setLoading(true);
     try {
-      setLoading(true);
-      console.log('Fetching user data for:', user?.id);
-      
-      const { data, error } = await supabase
+      // Fetch user balance
+      const { data: balanceData, error: balanceError } = await supabase
         .from('users')
-        .select('*')
-        .eq('id', user?.id)
+        .select('balance_inr')
+        .eq('id', user.id)
         .single();
 
-      if (error) {
-        console.error('Error fetching user data:', error);
-        if (error.code === 'PGRST116') {
-          console.log('User not found in users table, creating...');
-          const { error: insertError } = await supabase
-            .from('users')
-            .insert({
-              id: user?.id,
-              email: user?.email || '',
-              name: user?.user_metadata?.name || user?.email?.split('@')[0] || 'User',
-              balance_inr: 0,
-              balance_gbp: 0,
-              status: 'active',
-              kyc_status: 'pending',
-              is_admin: user?.email === 'bnoy.studios@gmail.com'
-            });
-          
-          if (insertError) {
-            console.error('Error creating user:', insertError);
-            throw insertError;
-          }
-          
-          const { data: newData, error: newError } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', user?.id)
-            .single();
-          
-          if (newError) throw newError;
-          setUserData(newData);
-        } else {
-          throw error;
-        }
-      } else {
-        console.log('User data fetched successfully:', data);
-        setUserData(data);
-      }
+      if (balanceError) throw balanceError;
+      setBalance(balanceData?.balance_inr || 0);
+
+      // Fetch transaction history
+      const { data: transactionsData, error: transactionsError } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (transactionsError) throw transactionsError;
+      setTransactions(transactionsData || []);
     } catch (error) {
-      console.error('Error in fetchUserData:', error);
+      console.error('Error fetching data:', error);
       toast({
         title: 'Error',
-        description: 'Failed to load wallet data',
+        description: 'Failed to fetch wallet data',
         variant: 'destructive',
       });
     } finally {
@@ -86,90 +123,84 @@ export const WalletScreen = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 flex items-center justify-center">
-        <div className="animate-pulse text-white">Loading wallet...</div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 p-4">
-      <div className="container mx-auto max-w-6xl">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-emerald-600 flex items-center justify-center">
-              <Wallet className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white hindi-font">Digital Wallet</h1>
-              <p className="text-gray-400">Manage your funds securely</p>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4">
+      <motion.div
+        className="mb-8"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-white hindi-font">
+              My Wallet
+            </h1>
+            <p className="text-gray-400">Manage your funds and transactions</p>
           </div>
-        </motion.div>
+          <div className="text-right">
+            <p className="text-gray-400">Available Balance</p>
+            <p className="text-3xl font-bold text-green-400">₹{balance.toLocaleString()}</p>
+          </div>
+        </div>
+      </motion.div>
 
-        {/* Wallet Balance Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <WalletBalance currency={currency} onCurrencyChange={setCurrency} />
-        </motion.div>
+      <Tabs defaultValue="balance" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4 bg-gray-800/50 border border-gray-700">
+          <TabsTrigger value="balance">Balance</TabsTrigger>
+          <TabsTrigger value="deposit">Deposit</TabsTrigger>
+          <TabsTrigger value="withdraw">Withdraw</TabsTrigger>
+          <TabsTrigger value="history">History</TabsTrigger>
+        </TabsList>
 
-        {/* Main Content Tabs */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Tabs defaultValue="deposit" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 glass-card p-1">
-              <TabsTrigger value="deposit" className="data-[state=active]:bg-green-600 text-white">
-                <Plus className="w-4 h-4 mr-2" />
-                Deposit
-              </TabsTrigger>
-              <TabsTrigger value="withdraw" className="data-[state=active]:bg-red-600 text-white">
-                <Minus className="w-4 h-4 mr-2" />
-                Withdraw
-              </TabsTrigger>
-              <TabsTrigger value="transfer" className="data-[state=active]:bg-blue-600 text-white">
-                <ArrowUpRight className="w-4 h-4 mr-2" />
-                Transfer
-              </TabsTrigger>
-              <TabsTrigger value="history" className="data-[state=active]:bg-purple-600 text-white">
-                <ArrowDownLeft className="w-4 h-4 mr-2" />
-                History
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="deposit" className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <EnhancedManualDepositForm />
-                <RazorpayIntegration onSuccess={fetchUserData} />
+        <TabsContent value="balance" className="space-y-6">
+          <Card className="glass-card border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <WalletIcon className="w-5 h-5 text-green-400" />
+                Current Balance
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center">
+                <p className="text-gray-400">Available Balance</p>
+                <p className="text-5xl font-bold text-green-400">₹{balance.toLocaleString()}</p>
               </div>
-            </TabsContent>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-            <TabsContent value="withdraw">
-              <PaymentMethodSetup />
-            </TabsContent>
+        <TabsContent value="deposit" className="space-y-6">
+          <EnhancedManualDepositForm />
+        </TabsContent>
 
-            <TabsContent value="transfer">
-              <P2PTransfer />
-            </TabsContent>
+        <TabsContent value="withdraw" className="space-y-6">
+          <EnhancedWithdrawalForm />
+        </TabsContent>
 
-            <TabsContent value="history">
-              <TransactionHistory />
-            </TabsContent>
-          </Tabs>
-        </motion.div>
-      </div>
+        <TabsContent value="history" className="space-y-6">
+          <Card className="glass-card border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Clock className="w-5 h-5 text-blue-400" />
+                Transaction History
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="text-center py-8 text-gray-400">Loading transactions...</div>
+              ) : transactions.length === 0 ? (
+                <div className="text-center py-8 text-gray-400">No transactions found</div>
+              ) : (
+                <div className="space-y-4">
+                  {transactions.map((transaction) => (
+                    <TransactionItem key={transaction.id} transaction={transaction} />
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

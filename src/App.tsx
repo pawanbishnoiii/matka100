@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
-import ModernLandingPage from "./pages/ModernLandingPage";
+import UltraModernLandingPage from "./pages/UltraModernLandingPage";
 import GameScreen from "./pages/GameScreen";
 import GamesListPage from "./pages/GamesListPage";
 import ResultsPage from "./pages/ResultsPage";
@@ -28,7 +27,7 @@ function App() {
           <Sonner />
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<ModernLandingPage />} />
+              <Route path="/" element={<UltraModernLandingPage />} />
               <Route path="/classic" element={<Index />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/games" element={<GamesListPage />} />
