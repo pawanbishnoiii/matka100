@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Wallet, DollarSign, Building2, Smartphone, Bitcoin, Copy, CheckCircle, AlertTriangle } from 'lucide-react';
@@ -185,7 +184,7 @@ export const EnhancedWithdrawalForm = () => {
           amount: amount,
           currency: formData.currency,
           status: 'pending',
-          payment_method: formData.payment_method,
+          payment_method: formData.payment_method as 'upi' | 'bank_transfer' | 'usdt_trc20',
           commission: fee,
           description: `Withdrawal request - ${selectedMethod?.label}`,
           metadata: {

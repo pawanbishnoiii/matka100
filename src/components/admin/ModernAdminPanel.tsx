@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -23,7 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AdminGameManager } from './AdminGameManager';
 import { AdminPayoutManager } from './AdminPayoutManager';
 import { AdminRazorpayPayments } from './AdminRazorpayPayments';
-import { AdminManualDeposits } from './AdminManualDeposits';
+import AdminManualDeposits from './AdminManualDeposits';
 import { AdminPaymentGateway } from './AdminPaymentGateway';
 
 // Indian Admin Mascot Component
@@ -215,6 +214,11 @@ export const ModernAdminPanel = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
 
+  const handleStatsUpdate = () => {
+    // Refresh stats or perform any update logic
+    console.log('Stats updated');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900 p-4">
       {/* Admin Mascot */}
@@ -357,11 +361,11 @@ export const ModernAdminPanel = () => {
               </TabsContent>
 
               <TabsContent value="games">
-                <AdminGameManager />
+                <AdminGameManager onStatsUpdate={handleStatsUpdate} />
               </TabsContent>
 
               <TabsContent value="payouts">
-                <AdminPayoutManager onStatsUpdate={() => {}} />
+                <AdminPayoutManager onStatsUpdate={handleStatsUpdate} />
               </TabsContent>
 
               <TabsContent value="deposits">
