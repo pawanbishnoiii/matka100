@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { ModernAdminPanel } from '@/components/admin/ModernAdminPanel';
+import ComprehensiveAdminPanel from '@/components/admin/ComprehensiveAdminPanel';
 
 const AdminPage = () => {
   const { user, loading } = useAuth();
@@ -26,7 +26,7 @@ const AdminPage = () => {
     return null;
   }
 
-  return <ModernAdminPanel />;
+  return <ComprehensiveAdminPanel />;
 };
 
 export default AdminPage;

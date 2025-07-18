@@ -16,6 +16,7 @@ import EnhancedProfilePage from './pages/EnhancedProfilePage';
 import AdminPage from './pages/AdminPage';
 import NotFound from './pages/NotFound';
 import HelpPage from '@/pages/HelpPage';
+import LeaderboardPage from './pages/LeaderboardPage';
 import ModernAppLayout from './components/layout/ModernAppLayout';
 
 // Import our modern styles
@@ -155,6 +156,17 @@ function App() {
             }
           >
             <Route index element={<AdminPage />} />
+          </Route>
+          
+          <Route 
+            path="/leaderboard" 
+            element={
+              <ProtectedRoute>
+                <ModernAppLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<LeaderboardPage />} />
           </Route>
           
           {/* Catch all route */}

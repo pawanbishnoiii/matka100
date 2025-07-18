@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { ArrowLeft, Home } from 'lucide-react';
-import WalletScreen from '../components/WalletScreen';
+import EnhancedWalletScreen from '@/components/wallet/EnhancedWalletScreen';
 import { Button } from '../components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import BottomNavigation from '@/components/layout/BottomNavigation';
@@ -48,7 +48,7 @@ const WalletPage = () => {
 
         {/* Wallet Content */}
         <div className="container mx-auto">
-          <WalletScreen />
+          <EnhancedWalletScreen />
         </div>
 
         {/* Bottom Padding for Mobile Navigation */}

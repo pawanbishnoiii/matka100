@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { ArrowLeft, Home } from 'lucide-react';
-import ResultsScreen from '../components/ResultsScreen';
+import EnhancedResultsScreen from '@/components/results/EnhancedResultsScreen';
 import { Button } from '../components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import BottomNavigation from '@/components/layout/BottomNavigation';
@@ -48,7 +48,7 @@ const ResultsPage = () => {
 
         {/* Results Content */}
         <div className="container mx-auto px-4">
-          <ResultsScreen />
+          <EnhancedResultsScreen />
         </div>
 
         {/* Bottom Padding for Mobile Navigation */}

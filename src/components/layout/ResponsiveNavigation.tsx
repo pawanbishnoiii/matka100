@@ -16,6 +16,7 @@ import {
   Monitor
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import NotificationCenter from '@/components/notifications/NotificationCenter';
 import { useTheme } from '@/components/ui/theme-provider';
 import { PremiumButton } from '@/components/ui/premium-modern-button';
 import { PremiumGlassCard } from '@/components/ui/premium-glass-card';
