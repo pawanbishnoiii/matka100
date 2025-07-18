@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import ModernIndex from './pages/ModernIndex';
 import AuthPage from './pages/AuthPage';
 import GamesListPage from './pages/GamesListPage';
@@ -36,22 +37,127 @@ function App() {
       <Toaster />
       <BrowserRouter>
         <Routes>
-          {/* Routes with Modern Layout */}
-          <Route path="/" element={<ModernAppLayout />}>
-            <Route index element={<ModernIndex />} />
-            <Route path="games" element={<GamesListPage />} />
-            <Route path="game/:gameId" element={<GameScreen />} />
-            <Route path="mobile-game/:gameId" element={<MobileGamePage />} />
-            <Route path="results" element={<ResultsPage />} />
-            <Route path="wallet" element={<WalletPage />} />
-            <Route path="profile" element={<EnhancedProfilePage />} />
-            <Route path="profile-overview" element={<ProfileScreen />} />
-            <Route path="help" element={<HelpPage />} />
-            <Route path="admin" element={<AdminPage />} />
+          {/* Public route - Landing page for non-authenticated users */}
+          <Route 
+            path="/" 
+            element={
+              <ProtectedRoute requireAuth={false} redirectTo="/games">
+                <ModernIndex />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Auth route - Only accessible to non-authenticated users */}
+          <Route 
+            path="/auth" 
+            element={
+              <ProtectedRoute requireAuth={false} redirectTo="/games">
+                <AuthPage />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Protected routes - Only accessible to authenticated users */}
+          <Route 
+            path="/games" 
+            element={
+              <ProtectedRoute>
+                <ModernAppLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<GamesListPage />} />
           </Route>
           
-          {/* Standalone routes (no layout) */}
-          <Route path="/auth" element={<AuthPage />} />
+          <Route 
+            path="/game/:gameId" 
+            element={
+              <ProtectedRoute>
+                <ModernAppLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<GameScreen />} />
+          </Route>
+          
+          <Route 
+            path="/mobile-game/:gameId" 
+            element={
+              <ProtectedRoute>
+                <ModernAppLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<MobileGamePage />} />
+          </Route>
+          
+          <Route 
+            path="/results" 
+            element={
+              <ProtectedRoute>
+                <ModernAppLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<ResultsPage />} />
+          </Route>
+          
+          <Route 
+            path="/wallet" 
+            element={
+              <ProtectedRoute>
+                <ModernAppLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<WalletPage />} />
+          </Route>
+          
+          <Route 
+            path="/profile" 
+            element={
+              <ProtectedRoute>
+                <ModernAppLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<EnhancedProfilePage />} />
+          </Route>
+          
+          <Route 
+            path="/profile-overview" 
+            element={
+              <ProtectedRoute>
+                <ModernAppLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<ProfileScreen />} />
+          </Route>
+          
+          <Route 
+            path="/help" 
+            element={
+              <ProtectedRoute>
+                <ModernAppLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<HelpPage />} />
+          </Route>
+          
+          <Route 
+            path="/admin" 
+            element={
+              <ProtectedRoute>
+                <ModernAppLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<AdminPage />} />
+          </Route>
+          
+          {/* Catch all route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

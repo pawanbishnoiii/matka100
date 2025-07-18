@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
@@ -9,6 +8,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
+  signInWithFacebook: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -110,6 +110,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       toast({
         title: 'Error',
         description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const signInWithFacebook = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'facebook',
+        options: {
+          redirectTo: `${window.location.origin}/games`,
+        },
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
+      console.error('Facebook sign-in error:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Facebook login is not available yet',
         variant: 'destructive',
       });
     }
@@ -218,6 +238,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     session,
     loading,
     signInWithGoogle,
+    signInWithFacebook,
     signInWithEmail,
     signUpWithEmail,
     signOut,
