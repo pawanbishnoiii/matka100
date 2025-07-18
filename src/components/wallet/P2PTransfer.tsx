@@ -10,7 +10,11 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
-const P2PTransfer = () => {
+interface P2PTransferProps {
+  onSuccess?: () => void;
+}
+
+const P2PTransfer = ({ onSuccess }: P2PTransferProps = {}) => {
   const [transferData, setTransferData] = useState({
     receiverUUI: '',
     amount: '',
@@ -151,6 +155,9 @@ const P2PTransfer = () => {
         title: 'Success',
         description: `₹${amount} transferred successfully to ${receiver.name || transferData.receiverUUI}`,
       });
+
+      // Call onSuccess callback
+      onSuccess?.();
 
       setTransferData({ receiverUUI: '', amount: '', description: '' });
     } catch (error: any) {

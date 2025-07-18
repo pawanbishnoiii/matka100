@@ -348,6 +348,7 @@ const EnhancedGameInterface: React.FC<EnhancedGameInterfaceProps> = ({ gameId })
               <EnhancedNumberBoard
                 onNumberSelect={handleNumberSelect}
                 selectedNumbers={selectedNumbers}
+                minBet={10}
                 multiplier={game.multipliers?.single_ank || 10}
               />
             </motion.div>

@@ -28,7 +28,11 @@ interface Transaction {
   metadata: any;
 }
 
-const TransactionHistory = () => {
+interface TransactionHistoryProps {
+  limit?: number;
+}
+
+const TransactionHistory = ({ limit }: TransactionHistoryProps = {}) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -50,7 +54,7 @@ const TransactionHistory = () => {
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(limit || 20);
 
       if (error) throw error;
 

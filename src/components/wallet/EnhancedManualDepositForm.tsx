@@ -66,7 +66,11 @@ const BOBIcon = () => (
   </svg>
 );
 
-const EnhancedManualDepositForm = () => {
+interface EnhancedManualDepositFormProps {
+  onSuccess?: () => void;
+}
+
+const EnhancedManualDepositForm = ({ onSuccess }: EnhancedManualDepositFormProps = {}) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -252,6 +256,9 @@ const EnhancedManualDepositForm = () => {
         title: 'Deposit Request Submitted! 🎉',
         description: 'Your manual deposit request has been submitted. Admin will review and approve within 5-30 minutes.',
       });
+
+      // Call onSuccess callback
+      onSuccess?.();
 
       // Reset form
       setFormData({
