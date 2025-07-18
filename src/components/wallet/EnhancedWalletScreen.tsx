@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import WalletBalance from './WalletBalance';
 import RazorpayPayment from './RazorpayPayment';
 import EnhancedManualDepositForm from './EnhancedManualDepositForm';
+import EnhancedWithdrawalForm from './EnhancedWithdrawalForm';
 import P2PTransfer from './P2PTransfer';
 import TransactionHistory from './TransactionHistory';
 import { useAuth } from '@/hooks/useAuth';
@@ -227,20 +228,7 @@ const EnhancedWalletScreen = () => {
 
             {/* Withdraw Tab */}
             <TabsContent value="withdraw" className="space-y-6">
-              <Card className="bg-gaming-card border-gaming-border">
-                <CardHeader>
-                  <CardTitle className="text-white">Withdraw Funds</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <ArrowUpRight className="w-16 h-16 text-gaming-text-secondary mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-white mb-2">Withdrawal Coming Soon</h3>
-                    <p className="text-gaming-text-secondary">
-                      Withdrawal functionality will be available soon. Contact support for assistance.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+              <EnhancedWithdrawalForm onSuccess={handlePaymentSuccess} />
             </TabsContent>
 
             {/* Transfer Tab */}
